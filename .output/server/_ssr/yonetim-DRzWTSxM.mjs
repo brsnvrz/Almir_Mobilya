@@ -1,0 +1,1260 @@
+import { n as __toESM } from "../_runtime.mjs";
+import { a as getFullCategories, c as removeSubcategory, l as saveProduct, n as createSubcategory, o as removeCategory, r as getAllProducts, s as removeProduct, t as createCategory } from "./catalog-C46Q34UE.mjs";
+import { a as require_jsx_runtime, i as useQueryClient, n as useQuery, o as require_react, t as useMutation } from "../_libs/react+tanstack__react-query.mjs";
+import { h as Link } from "../_libs/@tanstack/react-router+[...].mjs";
+import { t as formatPrice } from "./format-zQdBECWS.mjs";
+import { E as ExternalLink, S as FolderTree, a as SlidersVertical, b as Image, c as Send, d as Pen, f as Package, o as Shield, p as MessageSquare, r as Trash2, t as X, u as Plus, y as Layers } from "../_libs/lucide-react.mjs";
+import { n as toast } from "../_libs/sonner.mjs";
+import { i as useAuth, n as AuthModal } from "./AuthModal-C56nx3nQ.mjs";
+import { a as updateMessageStatus, i as insertMessageReply, n as getMessages, t as getMessageReplies } from "./messages-tFNJ6S8J.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/yonetim-DRzWTSxM.js
+var import_react = /* @__PURE__ */ __toESM(require_react());
+var import_jsx_runtime = require_jsx_runtime();
+function AdminPage() {
+	const { user, isAdmin, loading } = useAuth();
+	const [tab, setTab] = (0, import_react.useState)("urunler");
+	const [authModalOpen, setAuthModalOpen] = (0, import_react.useState)(false);
+	if (loading) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+		className: "mx-auto max-w-5xl px-5 py-24 text-center text-muted-foreground",
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+			className: "animate-pulse text-base",
+			children: "Yetki kontrol ediliyor…"
+		})
+	});
+	if (!user) return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "mx-auto max-w-md px-5 py-24 text-center",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "mx-auto grid size-12 place-items-center rounded-2xl bg-primary/10 text-primary",
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Shield, { className: "size-6" })
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
+				className: "mt-4 font-display text-3xl font-semibold tracking-tight",
+				children: "Yönetici Girişi"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "mt-3 text-sm text-muted-foreground",
+				children: "Almir Mobilya yönetim paneline erişmek için yetkili hesabınızla giriş yapınız."
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+				onClick: () => setAuthModalOpen(true),
+				className: "mt-6 rounded-full bg-primary px-8 py-2.5 text-sm font-semibold text-primary-foreground shadow transition-transform hover:scale-105",
+				children: "Giriş Yap"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(AuthModal, {
+				isOpen: authModalOpen,
+				onClose: () => setAuthModalOpen(false)
+			})
+		]
+	});
+	if (!isAdmin) return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "mx-auto max-w-md px-5 py-24 text-center",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "mx-auto grid size-12 place-items-center rounded-2xl bg-destructive/10 text-destructive",
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Shield, { className: "size-6" })
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
+				className: "mt-4 font-display text-3xl font-semibold tracking-tight",
+				children: "Erişim Yetkisi Yok"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+				className: "mt-3 text-sm text-muted-foreground",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: user.email }), " hesabının yönetim paneline erişim yetkisi bulunmamaktadır."]
+			})
+		]
+	});
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "mx-auto max-w-7xl px-5 py-10",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "flex flex-col justify-between gap-4 border-b border-border pb-6 sm:flex-row sm:items-center",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex items-center gap-2",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+						className: "label-eyebrow",
+						children: "Almir Mobilya"
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+						className: "rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-semibold text-primary",
+						children: "Admin"
+					})]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
+					className: "mt-1 font-display text-3xl font-semibold tracking-tight sm:text-4xl",
+					children: "Yönetim Paneli"
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+					className: "text-xs text-muted-foreground",
+					children: ["Oturum açan: ", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+						className: "font-medium text-foreground",
+						children: user.email
+					})]
+				})
+			] }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "flex flex-wrap gap-2",
+				children: [
+					[
+						"urunler",
+						"Ürünler",
+						Package
+					],
+					[
+						"kategoriler",
+						"Kategori & Alt Kategori",
+						FolderTree
+					],
+					[
+						"mesajlar",
+						"Gelen Mesajlar",
+						MessageSquare
+					]
+				].map(([value, label, Icon]) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+					onClick: () => setTab(value),
+					className: `flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold transition-all ${tab === value ? "bg-ink text-ink-foreground shadow" : "border border-border bg-card text-muted-foreground hover:bg-secondary hover:text-foreground"}`,
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { className: "size-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: label })]
+				}, value))
+			})]
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "mt-8",
+			children: [
+				tab === "urunler" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ProductsAdminSection, {}),
+				tab === "kategoriler" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CategoriesAdminSection, {}),
+				tab === "mesajlar" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MessagesAdminSection, {})
+			]
+		})]
+	});
+}
+var emptyProductForm = {
+	subcategory_id: "",
+	name: "",
+	slug: "",
+	summary: "",
+	description: "",
+	materials: "",
+	width_cm: "",
+	height_cm: "",
+	depth_cm: "",
+	weight: "",
+	warranty: "",
+	delivery_time: "",
+	production_place: "",
+	price: "",
+	currency: "TRY",
+	image_url: "",
+	gallery: [],
+	extra_specs: {}
+};
+function ProductsAdminSection() {
+	const queryClient = useQueryClient();
+	const [selectedSubId, setSelectedSubId] = (0, import_react.useState)("all");
+	const [search, setSearch] = (0, import_react.useState)("");
+	const [editingProduct, setEditingProduct] = (0, import_react.useState)(null);
+	const [isFormOpen, setIsFormOpen] = (0, import_react.useState)(false);
+	const { data: categories } = useQuery({
+		queryKey: ["admin-categories-all"],
+		queryFn: async () => {
+			return getFullCategories();
+		}
+	});
+	const { data: products, isLoading } = useQuery({
+		queryKey: ["admin-products-all"],
+		queryFn: async () => {
+			return getAllProducts();
+		}
+	});
+	const saveProductMutation = useMutation({
+		mutationFn: async (payload) => {
+			if (!payload.name.trim()) throw new Error("Ürün adı zorunludur.");
+			if (!payload.subcategory_id) throw new Error("Lütfen bir alt kategori seçin.");
+			const slug = payload.slug.trim() || payload.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+			const row = {
+				subcategory_id: payload.subcategory_id,
+				name: payload.name.trim(),
+				slug,
+				summary: payload.summary.trim() || null,
+				description: payload.description.trim() || null,
+				materials: payload.materials.split(",").map((m) => m.trim()).filter(Boolean),
+				width_cm: payload.width_cm.trim() || null,
+				height_cm: payload.height_cm.trim() || null,
+				depth_cm: payload.depth_cm.trim() || null,
+				weight: payload.weight.trim() || null,
+				warranty: payload.warranty.trim() || null,
+				delivery_time: payload.delivery_time.trim() || null,
+				production_place: payload.production_place.trim() || null,
+				price: payload.price ? Number(payload.price) : null,
+				currency: payload.currency || "TRY",
+				image_url: payload.image_url.trim() || null,
+				gallery: payload.gallery.filter((g) => Boolean(g && g.trim())),
+				extra_specs: payload.extra_specs || {}
+			};
+			await saveProduct(row, payload.id);
+		},
+		onSuccess: () => {
+			toast.success("Ürün başarıyla kaydedildi!");
+			setIsFormOpen(false);
+			setEditingProduct(null);
+			queryClient.invalidateQueries({ queryKey: ["admin-products-all"] });
+			queryClient.invalidateQueries({ queryKey: ["category-page"] });
+			queryClient.invalidateQueries({ queryKey: ["catalog"] });
+			queryClient.invalidateQueries({ queryKey: ["product"] });
+		},
+		onError: (err) => {
+			toast.error("Hata: " + (err.message || "Kaydedilemedi."));
+		}
+	});
+	const deleteProductMutation = useMutation({
+		mutationFn: async (id) => {
+			if (!confirm("Bu ürünü silmek istediğinize emin misiniz?")) return;
+			await removeProduct(id);
+		},
+		onSuccess: () => {
+			toast.success("Ürün silindi.");
+			queryClient.invalidateQueries({ queryKey: ["admin-products-all"] });
+		}
+	});
+	const allSubcategories = (categories || []).flatMap((c) => c.subcategories || []);
+	const filteredProducts = (products || []).filter((p) => {
+		const matchSub = selectedSubId === "all" || p.subcategory_id === selectedSubId;
+		const matchSearch = !search.trim() || p.name.toLowerCase().includes(search.toLowerCase()) || p.slug.toLowerCase().includes(search.toLowerCase());
+		return matchSub && matchSearch;
+	});
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+		/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "flex flex-wrap items-center gap-3",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+					value: search,
+					onChange: (e) => setSearch(e.target.value),
+					placeholder: "Ürün adı ile ara…",
+					className: "w-64 rounded-full border border-input bg-background px-4 py-2 text-xs outline-none focus:ring-2 focus:ring-primary"
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", {
+					value: selectedSubId,
+					onChange: (e) => setSelectedSubId(e.target.value),
+					className: "rounded-full border border-input bg-background px-4 py-2 text-xs outline-none focus:ring-2 focus:ring-primary",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("option", {
+						value: "all",
+						children: [
+							"Tüm Alt Kategoriler (",
+							products?.length ?? 0,
+							")"
+						]
+					}), allSubcategories.map((sub) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+						value: sub.id,
+						children: sub.name
+					}, sub.id))]
+				})]
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+				onClick: () => {
+					setEditingProduct({
+						...emptyProductForm,
+						subcategory_id: allSubcategories[0]?.id || ""
+					});
+					setIsFormOpen(true);
+				},
+				className: "inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2 text-xs font-semibold text-primary-foreground shadow transition-transform hover:scale-105",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Plus, { className: "size-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Yeni Ürün Ekle" })]
+			})]
+		}),
+		/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "panel mt-6 overflow-hidden",
+			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "overflow-x-auto",
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("table", {
+					className: "w-full text-left text-xs",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("thead", {
+						className: "border-b border-border bg-secondary/50 text-muted-foreground uppercase tracking-wider",
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
+								className: "p-3",
+								children: "Görsel"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
+								className: "p-3",
+								children: "Ürün Adı"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
+								className: "p-3",
+								children: "Alt Kategori"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
+								className: "p-3",
+								children: "Fiyat"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
+								className: "p-3",
+								children: "Galeri"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
+								className: "p-3 text-right",
+								children: "İşlemler"
+							})
+						] })
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tbody", {
+						className: "divide-y divide-border",
+						children: [filteredProducts.map((p) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", {
+							className: "hover:bg-secondary/30 transition-colors",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
+									className: "p-3",
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
+										src: p.image_url || "/images/kategori-dolap.jpg",
+										alt: p.name,
+										className: "size-12 rounded-lg object-cover border border-border"
+									})
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", {
+									className: "p-3 font-semibold text-foreground",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+										className: "text-sm",
+										children: p.name
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+										className: "text-[11px] text-muted-foreground font-normal",
+										children: ["/", p.slug]
+									})]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
+									className: "p-3 text-muted-foreground",
+									children: p.subcategories?.name || "Belirtilmemiş"
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
+									className: "p-3 font-display font-semibold text-primary",
+									children: formatPrice(p.price ? Number(p.price) : null, p.currency)
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
+									className: "p-3 text-muted-foreground",
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+										className: "rounded-md bg-secondary px-2 py-1 text-[11px] font-medium",
+										children: [(p.gallery?.length ?? 0) + (p.image_url ? 1 : 0), " görsel"]
+									})
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
+									className: "p-3 text-right",
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "flex items-center justify-end gap-2",
+										children: [
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Link, {
+												to: "/urun/$productId",
+												params: { productId: p.id },
+												target: "_blank",
+												className: "rounded-lg border border-border p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground",
+												title: "Sayfada Görüntüle",
+												children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ExternalLink, { className: "size-3.5" })
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+												onClick: () => {
+													setEditingProduct({
+														id: p.id,
+														subcategory_id: p.subcategory_id,
+														name: p.name,
+														slug: p.slug,
+														summary: p.summary || "",
+														description: p.description || "",
+														materials: Array.isArray(p.materials) ? p.materials.join(", ") : "",
+														width_cm: p.width_cm || "",
+														height_cm: p.height_cm || "",
+														depth_cm: p.depth_cm || "",
+														weight: p.weight || "",
+														warranty: p.warranty || "",
+														delivery_time: p.delivery_time || "",
+														production_place: p.production_place || "",
+														price: p.price ? String(p.price) : "",
+														currency: p.currency || "TRY",
+														image_url: p.image_url || "",
+														gallery: Array.isArray(p.gallery) ? p.gallery : [],
+														extra_specs: p.extra_specs || {}
+													});
+													setIsFormOpen(true);
+												},
+												className: "rounded-lg border border-border p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground",
+												title: "Düzenle",
+												children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Pen, { className: "size-3.5" })
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+												onClick: () => deleteProductMutation.mutate(p.id),
+												className: "rounded-lg border border-border p-1.5 text-destructive hover:bg-destructive/10",
+												title: "Sil",
+												children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Trash2, { className: "size-3.5" })
+											})
+										]
+									})
+								})
+							]
+						}, p.id)), filteredProducts.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tr", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
+							colSpan: 6,
+							className: "p-8 text-center text-muted-foreground",
+							children: isLoading ? "Yükleniyor…" : "Eşleşen ürün bulunamadı."
+						}) })]
+					})]
+				})
+			})
+		}),
+		isFormOpen && editingProduct && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ProductEditModal, {
+			initial: editingProduct,
+			allSubcategories,
+			onClose: () => {
+				setIsFormOpen(false);
+				setEditingProduct(null);
+			},
+			onSave: (payload) => saveProductMutation.mutate(payload),
+			isPending: saveProductMutation.isPending
+		})
+	] });
+}
+function ProductEditModal({ initial, allSubcategories, onClose, onSave, isPending }) {
+	const [form, setForm] = (0, import_react.useState)(initial);
+	const [newGalleryUrl, setNewGalleryUrl] = (0, import_react.useState)("");
+	const [newSpecKey, setNewSpecKey] = (0, import_react.useState)("");
+	const [newSpecVal, setNewSpecVal] = (0, import_react.useState)("");
+	const set = (key) => (e) => {
+		setForm((f) => ({
+			...f,
+			[key]: e.target.value
+		}));
+	};
+	const addGalleryImage = () => {
+		if (!newGalleryUrl.trim()) return;
+		setForm((f) => ({
+			...f,
+			gallery: [...f.gallery, newGalleryUrl.trim()]
+		}));
+		setNewGalleryUrl("");
+	};
+	const removeGalleryImage = (index) => {
+		setForm((f) => ({
+			...f,
+			gallery: f.gallery.filter((_, idx) => idx !== index)
+		}));
+	};
+	const addExtraSpec = () => {
+		if (!newSpecKey.trim() || !newSpecVal.trim()) return;
+		setForm((f) => ({
+			...f,
+			extra_specs: {
+				...f.extra_specs,
+				[newSpecKey.trim()]: newSpecVal.trim()
+			}
+		}));
+		setNewSpecKey("");
+		setNewSpecVal("");
+	};
+	const removeExtraSpec = (k) => {
+		setForm((f) => {
+			const next = { ...f.extra_specs };
+			delete next[k];
+			return {
+				...f,
+				extra_specs: next
+			};
+		});
+	};
+	const inputClass = "w-full rounded-lg border border-input bg-background px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-primary";
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+		className: "fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm overflow-y-auto",
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "panel max-h-[90vh] w-full max-w-3xl overflow-y-auto p-6 shadow-2xl bg-card",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "flex items-center justify-between border-b border-border pb-4",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
+					className: "font-display text-xl font-semibold",
+					children: form.id ? "Ürünü Düzenle" : "Yeni Ürün Ekle"
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+					onClick: onClose,
+					className: "rounded-lg p-1 text-muted-foreground hover:bg-secondary",
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, { className: "size-5" })
+				})]
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("form", {
+				onSubmit: (e) => {
+					e.preventDefault();
+					onSave(form);
+				},
+				className: "mt-6 space-y-5",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "grid gap-3 sm:grid-cols-2",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+								className: "mb-1 block text-xs font-semibold text-muted-foreground",
+								children: "Alt Kategori *"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", {
+								value: form.subcategory_id,
+								onChange: set("subcategory_id"),
+								className: inputClass,
+								required: true,
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+									value: "",
+									children: "Seçiniz"
+								}), allSubcategories.map((sub) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+									value: sub.id,
+									children: sub.name
+								}, sub.id))]
+							})] }),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+								className: "mb-1 block text-xs font-semibold text-muted-foreground",
+								children: "Ürün Adı *"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+								value: form.name,
+								onChange: (e) => {
+									set("name")(e);
+									if (!form.id && !form.slug) {
+										const generated = e.target.value.toLowerCase().replace(/[^a-z0-9ğüşıöç]+/g, "-").replace(/^-|-$/g, "");
+										setForm((f) => ({
+											...f,
+											slug: generated
+										}));
+									}
+								},
+								className: inputClass,
+								placeholder: "örn. Meşe Mutfak Üst Dolabı",
+								required: true
+							})] }),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+								className: "mb-1 block text-xs font-semibold text-muted-foreground",
+								children: "URL Adı (Slug) *"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+								value: form.slug,
+								onChange: set("slug"),
+								className: inputClass,
+								placeholder: "örn. mese-mutfak-ust-dolabi",
+								required: true
+							})] }),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+								className: "mb-1 block text-xs font-semibold text-muted-foreground",
+								children: "Fiyat (TL)"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+								type: "number",
+								value: form.price,
+								onChange: set("price"),
+								className: inputClass,
+								placeholder: "örn. 8450"
+							})] })
+						]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+						className: "mb-1 block text-xs font-semibold text-muted-foreground",
+						children: "Kısa Özet (Katalog Kartı Açıklaması)"
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+						value: form.summary,
+						onChange: set("summary"),
+						className: inputClass,
+						placeholder: "örn. Masif meşe gövde, 60 cm modül"
+					})] }),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+						className: "mb-1 block text-xs font-semibold text-muted-foreground",
+						children: "Detaylı Açıklama"
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("textarea", {
+						value: form.description,
+						onChange: set("description"),
+						rows: 3,
+						className: inputClass,
+						placeholder: "Ürünün detaylı işçilik, mekanizma ve tasarım özellikleri…"
+					})] }),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+						className: "mb-1 block text-xs font-semibold text-muted-foreground",
+						children: "Malzemeler (Virgülle ayırın)"
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+						value: form.materials,
+						onChange: set("materials"),
+						className: inputClass,
+						placeholder: "Masif meşe, Su bazlı vernik, Frenli menteşe"
+					})] }),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "rounded-xl border border-border p-4 bg-secondary/20",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h3", {
+								className: "text-xs font-semibold uppercase tracking-wider text-foreground flex items-center gap-1.5",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Image, { className: "size-4 text-primary" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Görsel ve Çoklu Galeri Yönetimi" })]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "mt-3",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+									className: "mb-1 block text-xs font-semibold text-muted-foreground",
+									children: "Ana Görsel Bağlantısı (URL)"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+									value: form.image_url,
+									onChange: set("image_url"),
+									className: inputClass,
+									placeholder: "https://... veya /images/hero-mutfak.jpg"
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "mt-4 border-t border-border pt-3",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+										className: "mb-1 block text-xs font-semibold text-muted-foreground",
+										children: "Ek Galeri Görselleri (Çoklu Fotoğraflar)"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "flex gap-2",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+											value: newGalleryUrl,
+											onChange: (e) => setNewGalleryUrl(e.target.value),
+											className: inputClass,
+											placeholder: "Ek görsel URL'si girin…",
+											onKeyDown: (e) => {
+												if (e.key === "Enter") {
+													e.preventDefault();
+													addGalleryImage();
+												}
+											}
+										}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+											type: "button",
+											onClick: addGalleryImage,
+											className: "rounded-lg bg-ink px-4 py-2 text-xs font-semibold text-ink-foreground",
+											children: "Galeriye Ekle"
+										})]
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "mt-3 flex flex-wrap gap-3",
+										children: [form.image_url && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "relative size-16 rounded-lg border-2 border-primary overflow-hidden",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
+												src: form.image_url,
+												alt: "Ana",
+												className: "h-full w-full object-cover"
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+												className: "absolute bottom-0 inset-x-0 bg-primary text-[9px] text-center font-bold text-primary-foreground",
+												children: "Ana"
+											})]
+										}), form.gallery.map((url, idx) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "group relative size-16 rounded-lg border border-border overflow-hidden",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
+												src: url,
+												alt: `Galeri ${idx}`,
+												className: "h-full w-full object-cover"
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+												type: "button",
+												onClick: () => removeGalleryImage(idx),
+												className: "absolute inset-0 grid place-items-center bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity",
+												title: "Görseli kaldır",
+												children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, { className: "size-4" })
+											})]
+										}, idx))]
+									})
+								]
+							})
+						]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "grid gap-3 sm:grid-cols-3",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+								className: "mb-1 block text-xs font-semibold text-muted-foreground",
+								children: "Genişlik (cm)"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+								value: form.width_cm,
+								onChange: set("width_cm"),
+								className: inputClass,
+								placeholder: "örn. 60"
+							})] }),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+								className: "mb-1 block text-xs font-semibold text-muted-foreground",
+								children: "Yükseklik (cm)"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+								value: form.height_cm,
+								onChange: set("height_cm"),
+								className: inputClass,
+								placeholder: "örn. 210"
+							})] }),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+								className: "mb-1 block text-xs font-semibold text-muted-foreground",
+								children: "Derinlik (cm)"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+								value: form.depth_cm,
+								onChange: set("depth_cm"),
+								className: inputClass,
+								placeholder: "örn. 35"
+							})] })
+						]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "grid gap-3 sm:grid-cols-2",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+								className: "mb-1 block text-xs font-semibold text-muted-foreground",
+								children: "Garanti Süresi"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+								value: form.warranty,
+								onChange: set("warranty"),
+								className: inputClass,
+								placeholder: "örn. 5 yıl"
+							})] }),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+								className: "mb-1 block text-xs font-semibold text-muted-foreground",
+								children: "Teslim Süresi"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+								value: form.delivery_time,
+								onChange: set("delivery_time"),
+								className: inputClass,
+								placeholder: "örn. 15-20 gün"
+							})] }),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+								className: "mb-1 block text-xs font-semibold text-muted-foreground",
+								children: "Üretim Yeri"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+								value: form.production_place,
+								onChange: set("production_place"),
+								className: inputClass,
+								placeholder: "örn. Bursa Atölyesi"
+							})] }),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+								className: "mb-1 block text-xs font-semibold text-muted-foreground",
+								children: "Ağırlık"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+								value: form.weight,
+								onChange: set("weight"),
+								className: inputClass,
+								placeholder: "örn. 24 kg"
+							})] })
+						]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "rounded-xl border border-border p-4 bg-secondary/20",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h3", {
+								className: "text-xs font-semibold uppercase tracking-wider text-foreground flex items-center gap-1.5",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SlidersVertical, { className: "size-4 text-primary" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Özel Teknik Özellikler (Extra Specs)" })]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "mt-3 flex gap-2",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+										value: newSpecKey,
+										onChange: (e) => setNewSpecKey(e.target.value),
+										placeholder: "Özellik adı (örn. Kulp)",
+										className: inputClass
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+										value: newSpecVal,
+										onChange: (e) => setNewSpecVal(e.target.value),
+										placeholder: "Değer (örn. Mat Krom)",
+										className: inputClass
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+										type: "button",
+										onClick: addExtraSpec,
+										className: "rounded-lg bg-ink px-4 py-2 text-xs font-semibold text-ink-foreground whitespace-nowrap",
+										children: "Özellik Ekle"
+									})
+								]
+							}),
+							Object.keys(form.extra_specs).length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "mt-3 divide-y divide-border text-xs",
+								children: Object.entries(form.extra_specs).map(([k, v]) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "flex items-center justify-between py-1.5",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+										className: "font-semibold text-muted-foreground",
+										children: [k, ":"]
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "flex items-center gap-2",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: v }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+											type: "button",
+											onClick: () => removeExtraSpec(k),
+											className: "text-destructive hover:opacity-80",
+											children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, { className: "size-3.5" })
+										})]
+									})]
+								}, k))
+							})
+						]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-6 flex items-center justify-end gap-3 border-t border-border pt-4",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							type: "button",
+							onClick: onClose,
+							className: "rounded-full border border-border px-5 py-2 text-xs font-medium hover:bg-secondary",
+							children: "Vazgeç"
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							type: "submit",
+							disabled: isPending,
+							className: "rounded-full bg-primary px-7 py-2 text-xs font-semibold text-primary-foreground shadow hover:opacity-90 disabled:opacity-50",
+							children: isPending ? "Kaydediliyor…" : "Kaydet"
+						})]
+					})
+				]
+			})]
+		})
+	});
+}
+function CategoriesAdminSection() {
+	const queryClient = useQueryClient();
+	const [catName, setCatName] = (0, import_react.useState)("");
+	const [catSlug, setCatSlug] = (0, import_react.useState)("");
+	const [catDesc, setCatDesc] = (0, import_react.useState)("");
+	const [catImg, setCatImg] = (0, import_react.useState)("");
+	const [activeCatId, setActiveCatId] = (0, import_react.useState)(null);
+	const [subName, setSubName] = (0, import_react.useState)("");
+	const [subSlug, setSubSlug] = (0, import_react.useState)("");
+	const [subDesc, setSubDesc] = (0, import_react.useState)("");
+	const [subImg, setSubImg] = (0, import_react.useState)("");
+	const { data: categories } = useQuery({
+		queryKey: ["admin-categories-full"],
+		queryFn: async () => {
+			return getFullCategories();
+		}
+	});
+	const selectedCat = categories?.find((c) => c.id === (activeCatId ?? categories[0]?.id)) ?? categories?.[0] ?? null;
+	const invalidateAll = () => {
+		queryClient.invalidateQueries({ queryKey: ["admin-categories-full"] });
+		queryClient.invalidateQueries({ queryKey: ["header-categories"] });
+		queryClient.invalidateQueries({ queryKey: ["categories"] });
+		queryClient.invalidateQueries({ queryKey: ["category-page"] });
+	};
+	const addCategory = useMutation({
+		mutationFn: async () => {
+			if (!catName.trim()) throw new Error("Kategori adı gereklidir.");
+			const slug = catSlug.trim() || catName.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+			await createCategory({
+				name: catName.trim(),
+				slug,
+				description: catDesc.trim() || null,
+				image_url: catImg.trim() || null
+			});
+		},
+		onSuccess: () => {
+			setCatName("");
+			setCatSlug("");
+			setCatDesc("");
+			setCatImg("");
+			toast.success("Ana kategori eklendi.");
+			invalidateAll();
+		}
+	});
+	const deleteCategory = useMutation({
+		mutationFn: async (id) => {
+			if (!confirm("Bu kategoriyi ve altındaki tüm ürünleri silmek istediğinize emin misiniz?")) return;
+			await removeCategory(id);
+		},
+		onSuccess: () => {
+			toast.success("Kategori silindi.");
+			invalidateAll();
+		}
+	});
+	const addSubcategory = useMutation({
+		mutationFn: async () => {
+			if (!selectedCat) throw new Error("Önce bir ana kategori seçmelisiniz.");
+			if (!subName.trim()) throw new Error("Alt kategori adı gereklidir.");
+			const slug = subSlug.trim() || subName.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+			await createSubcategory({
+				category_id: selectedCat.id,
+				name: subName.trim(),
+				slug,
+				description: subDesc.trim() || null,
+				image_url: subImg.trim() || null
+			});
+		},
+		onSuccess: () => {
+			setSubName("");
+			setSubSlug("");
+			setSubDesc("");
+			setSubImg("");
+			toast.success("Alt kategori eklendi.");
+			invalidateAll();
+		}
+	});
+	const deleteSubcategory = useMutation({
+		mutationFn: async (id) => {
+			if (!confirm("Bu alt kategoriyi ve içindeki ürünleri silmek istediğinize emin misiniz?")) return;
+			await removeSubcategory(id);
+		},
+		onSuccess: () => {
+			toast.success("Alt kategori silindi.");
+			invalidateAll();
+		}
+	});
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "grid gap-8 lg:grid-cols-2",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "panel p-6",
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h2", {
+					className: "font-display text-xl font-semibold flex items-center gap-2",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FolderTree, { className: "size-5 text-primary" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Ana Kategoriler" })]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "mt-4 rounded-xl border border-dashed border-border p-4 bg-secondary/30",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						className: "text-xs font-semibold mb-3",
+						children: "Yeni Ana Kategori Ekle"
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "grid gap-2",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+								value: catName,
+								onChange: (e) => {
+									setCatName(e.target.value);
+									if (!catSlug) setCatSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, "-"));
+								},
+								placeholder: "Kategori Adı (örn. Masa & Sandalye)",
+								className: "w-full rounded-lg border border-input bg-background px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-primary"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+								value: catSlug,
+								onChange: (e) => setCatSlug(e.target.value),
+								placeholder: "Slug (örn. masa-sandalye)",
+								className: "w-full rounded-lg border border-input bg-background px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-primary"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+								value: catDesc,
+								onChange: (e) => setCatDesc(e.target.value),
+								placeholder: "Açıklama",
+								className: "w-full rounded-lg border border-input bg-background px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-primary"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+								onClick: () => addCategory.mutate(),
+								disabled: !catName.trim() || addCategory.isPending,
+								className: "rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-50",
+								children: "Kategori Ekle"
+							})
+						]
+					})]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "mt-6 space-y-2",
+					children: categories?.map((cat) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						onClick: () => setActiveCatId(cat.id),
+						className: `flex items-center justify-between rounded-xl border p-3.5 cursor-pointer transition-all ${cat.id === selectedCat?.id ? "border-primary bg-secondary shadow-sm" : "border-border hover:bg-secondary/50"}`,
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "font-semibold text-sm",
+							children: cat.name
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+							className: "text-[11px] text-muted-foreground",
+							children: [
+								"/",
+								cat.slug,
+								" • ",
+								cat.subcategories?.length ?? 0,
+								" alt kategori"
+							]
+						})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "flex items-center gap-2",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+								onClick: (e) => {
+									e.stopPropagation();
+									deleteCategory.mutate(cat.id);
+								},
+								className: "rounded-lg p-1.5 text-destructive hover:bg-destructive/10",
+								title: "Sil",
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Trash2, { className: "size-4" })
+							})
+						})]
+					}, cat.id))
+				})
+			]
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "panel p-6",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h2", {
+				className: "font-display text-xl font-semibold flex items-center gap-2",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Layers, { className: "size-5 text-primary" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+					"\"",
+					selectedCat?.name || "Seçili",
+					"\" Alt Kategorileri"
+				] })]
+			}), selectedCat ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "mt-4 rounded-xl border border-dashed border-border p-4 bg-secondary/30",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+					className: "text-xs font-semibold mb-3",
+					children: "Bu Kategoriye Alt Kategori Ekle"
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "grid gap-2",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+							value: subName,
+							onChange: (e) => {
+								setSubName(e.target.value);
+								if (!subSlug) setSubSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, "-"));
+							},
+							placeholder: "Alt Kategori Adı (örn. Mutfak Dolabı)",
+							className: "w-full rounded-lg border border-input bg-background px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-primary"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+							value: subSlug,
+							onChange: (e) => setSubSlug(e.target.value),
+							placeholder: "Slug (örn. mutfak-dolabi)",
+							className: "w-full rounded-lg border border-input bg-background px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-primary"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+							value: subDesc,
+							onChange: (e) => setSubDesc(e.target.value),
+							placeholder: "Açıklama",
+							className: "w-full rounded-lg border border-input bg-background px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-primary"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							onClick: () => addSubcategory.mutate(),
+							disabled: !subName.trim() || addSubcategory.isPending,
+							className: "rounded-full bg-ink px-4 py-2 text-xs font-semibold text-ink-foreground disabled:opacity-50",
+							children: "Alt Kategori Ekle"
+						})
+					]
+				})]
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "mt-6 space-y-2",
+				children: [selectedCat.subcategories?.map((sub) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex items-center justify-between rounded-xl border border-border p-3.5 bg-card",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						className: "font-semibold text-sm",
+						children: sub.name
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+						className: "text-[11px] text-muted-foreground",
+						children: ["/", sub.slug]
+					})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+						onClick: () => deleteSubcategory.mutate(sub.id),
+						className: "rounded-lg p-1.5 text-destructive hover:bg-destructive/10",
+						title: "Sil",
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Trash2, { className: "size-4" })
+					})]
+				}, sub.id)), (!selectedCat.subcategories || selectedCat.subcategories.length === 0) && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+					className: "text-center py-6 text-xs text-muted-foreground",
+					children: "Bu ana kategoriye ait henüz alt kategori eklenmemiş."
+				})]
+			})] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "mt-6 text-xs text-muted-foreground",
+				children: "Lütfen soldan bir ana kategori seçin."
+			})]
+		})]
+	});
+}
+function MessagesAdminSection() {
+	const queryClient = useQueryClient();
+	const { user } = useAuth();
+	const [activeId, setActiveId] = (0, import_react.useState)(null);
+	const [adminReply, setAdminReply] = (0, import_react.useState)("");
+	const [filterStatus, setFilterStatus] = (0, import_react.useState)("all");
+	const { data: threads } = useQuery({
+		queryKey: ["admin-messages-list"],
+		queryFn: async () => {
+			return getMessages({ isAdmin: true });
+		}
+	});
+	const selectedThread = threads?.find((t) => t.id === (activeId ?? threads[0]?.id)) ?? threads?.[0] ?? null;
+	(0, import_react.useEffect)(() => {
+		const handler = () => {
+			queryClient.invalidateQueries({ queryKey: ["admin-messages-list"] });
+			if (selectedThread?.id) queryClient.invalidateQueries({ queryKey: ["admin-thread-replies", selectedThread.id] });
+		};
+		window.addEventListener("almir-messages-changed", handler);
+		return () => window.removeEventListener("almir-messages-changed", handler);
+	}, [selectedThread?.id, queryClient]);
+	const { data: replies } = useQuery({
+		queryKey: ["admin-thread-replies", selectedThread?.id],
+		enabled: !!selectedThread?.id,
+		queryFn: async () => {
+			return getMessageReplies(selectedThread.id);
+		}
+	});
+	const sendReplyMutation = useMutation({
+		mutationFn: async () => {
+			if (!user || !selectedThread || !adminReply.trim()) return;
+			await insertMessageReply({
+				message_id: selectedThread.id,
+				author_id: user.id,
+				author_name: "Almir Mobilya",
+				from_admin: true,
+				body: adminReply.trim()
+			});
+			await updateMessageStatus(selectedThread.id, "answered");
+		},
+		onSuccess: () => {
+			setAdminReply("");
+			toast.success("Yanıtınız kullanıcıya iletildi.");
+			queryClient.invalidateQueries({ queryKey: ["admin-thread-replies", selectedThread?.id] });
+			queryClient.invalidateQueries({ queryKey: ["admin-messages-list"] });
+		}
+	});
+	const toggleStatusMutation = useMutation({
+		mutationFn: async () => {
+			if (!selectedThread) return;
+			const nextStatus = selectedThread.status === "answered" ? "open" : "answered";
+			await updateMessageStatus(selectedThread.id, nextStatus);
+		},
+		onSuccess: () => {
+			toast.success("Durum güncellendi.");
+			queryClient.invalidateQueries({ queryKey: ["admin-messages-list"] });
+		}
+	});
+	const filteredThreads = (threads || []).filter((t) => {
+		if (filterStatus === "all") return true;
+		return t.status === filterStatus;
+	});
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "grid gap-6 md:grid-cols-[320px_1fr]",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "space-y-3",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "flex gap-1.5 rounded-xl border border-border bg-secondary/50 p-1 text-xs",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+						onClick: () => setFilterStatus("all"),
+						className: `flex-1 rounded-lg py-1.5 font-semibold ${filterStatus === "all" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"}`,
+						children: [
+							"Tümü (",
+							threads?.length ?? 0,
+							")"
+						]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+						onClick: () => setFilterStatus("open"),
+						className: `flex-1 rounded-lg py-1.5 font-semibold ${filterStatus === "open" ? "bg-card shadow-sm text-amber-600" : "text-muted-foreground"}`,
+						children: "Bekleyen"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+						onClick: () => setFilterStatus("answered"),
+						className: `flex-1 rounded-lg py-1.5 font-semibold ${filterStatus === "answered" ? "bg-card shadow-sm text-emerald-600" : "text-muted-foreground"}`,
+						children: "Yanıtlandı"
+					})
+				]
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "space-y-2",
+				children: [filteredThreads.map((t) => {
+					const isAnswered = t.status === "answered";
+					return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+						onClick: () => setActiveId(t.id),
+						className: `w-full rounded-xl border p-3.5 text-left text-xs transition-all ${t.id === selectedThread?.id ? "border-primary bg-secondary shadow-sm" : "border-border hover:bg-secondary/50"}`,
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex items-center justify-between",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "font-semibold truncate max-w-[180px]",
+									children: t.user_name || t.user_email
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: `rounded-full px-2 py-0.5 text-[10px] font-semibold ${isAnswered ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-amber-500/10 text-amber-600 dark:text-amber-400"}`,
+									children: isAnswered ? "Yanıtlandı" : "Bekliyor"
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "font-medium text-foreground mt-1 line-clamp-1",
+								children: t.subject || "Soru"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "mt-1 line-clamp-1 text-muted-foreground",
+								children: t.body
+							}),
+							t.products && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+								className: "mt-1.5 text-[10px] text-primary truncate",
+								children: ["İlgili Ürün: ", t.products.name]
+							})
+						]
+					}, t.id);
+				}), filteredThreads.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+					className: "text-center py-8 text-xs text-muted-foreground",
+					children: "Mesaj kaydı yok."
+				})]
+			})]
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "panel flex flex-col justify-between p-6 min-h-[500px]",
+			children: selectedThread ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "border-b border-border pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+						className: "text-xs text-muted-foreground",
+						children: [
+							"Gönderen: ",
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: selectedThread.user_name || "İsimsiz" }),
+							" (",
+							selectedThread.user_email,
+							")"
+						]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
+						className: "font-display text-xl font-semibold mt-1",
+						children: selectedThread.subject || "Soru"
+					})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+						onClick: () => toggleStatusMutation.mutate(),
+						className: `rounded-full px-3.5 py-1 text-xs font-semibold transition-colors ${selectedThread.status === "answered" ? "bg-emerald-500/15 text-emerald-600 hover:bg-emerald-500/25" : "bg-amber-500/15 text-amber-600 hover:bg-amber-500/25"}`,
+						children: selectedThread.status === "answered" ? "✓ Yanıtlandı Olarak İşaretli" : "Cevap Bekliyor (Tamamla)"
+					})]
+				}),
+				selectedThread.products && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "mt-4 flex items-center justify-between rounded-xl border border-primary/20 bg-primary/5 p-3",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex items-center gap-3",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
+							src: selectedThread.products.image_url || "/images/kategori-dolap.jpg",
+							alt: selectedThread.products.name,
+							className: "size-12 rounded-lg object-cover border border-border"
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "text-[10px] font-semibold uppercase tracking-wider text-primary",
+							children: "Hakkında Soru Sorulan Ürün"
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "text-sm font-semibold",
+							children: selectedThread.products.name
+						})] })]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Link, {
+						to: "/urun/$productId",
+						params: { productId: selectedThread.products.id },
+						target: "_blank",
+						className: "rounded-full bg-card border border-border px-3 py-1 text-xs font-medium text-foreground hover:bg-secondary",
+						children: "Ürünü Aç →"
+					})]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "mt-6 space-y-4",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "max-w-[85%] rounded-2xl rounded-tl-md bg-secondary p-4 text-sm",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "block text-[11px] font-semibold text-muted-foreground mb-1",
+								children: "Müşteri Mesajı"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "whitespace-pre-wrap",
+								children: selectedThread.body
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "mt-1 block text-[10px] opacity-60",
+								children: new Date(selectedThread.created_at).toLocaleString("tr-TR")
+							})
+						]
+					}), replies?.map((r) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: r.from_admin ? "ml-auto max-w-[85%] rounded-2xl rounded-tr-md bg-ink p-4 text-sm text-ink-foreground shadow-sm" : "max-w-[85%] rounded-2xl rounded-tl-md bg-secondary p-4 text-sm",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "block text-[11px] font-semibold text-primary mb-1",
+								children: r.from_admin ? "Almir Mobilya (Admin)" : selectedThread.user_name || "Müşteri"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "whitespace-pre-wrap",
+								children: r.body
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "mt-1 block text-right text-[10px] opacity-60",
+								children: new Date(r.created_at).toLocaleTimeString("tr-TR", {
+									hour: "2-digit",
+									minute: "2-digit"
+								})
+							})
+						]
+					}, r.id))]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "mt-8 border-t border-border pt-4",
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex gap-2",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+							value: adminReply,
+							onChange: (e) => setAdminReply(e.target.value),
+							placeholder: "Müşteriye resmi yanıtınızı yazın…",
+							className: "flex-1 rounded-full border border-input bg-background px-4 py-2.5 text-xs outline-none focus:ring-2 focus:ring-primary",
+							onKeyDown: (e) => {
+								if (e.key === "Enter" && !e.shiftKey) {
+									e.preventDefault();
+									if (adminReply.trim()) sendReplyMutation.mutate();
+								}
+							}
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							onClick: () => sendReplyMutation.mutate(),
+							disabled: !adminReply.trim() || sendReplyMutation.isPending,
+							className: "inline-flex items-center gap-1.5 rounded-full bg-primary px-5 py-2.5 text-xs font-semibold text-primary-foreground disabled:opacity-50 shadow",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Send, { className: "size-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Gönder" })]
+						})]
+					})
+				})
+			] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "m-auto text-center py-12 text-muted-foreground text-xs",
+				children: "Soldan bir mesaj seçiniz."
+			})
+		})]
+	});
+}
+//#endregion
+export { AdminPage as component };

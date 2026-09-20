@@ -1,0 +1,201 @@
+import { a as getFullCategories, r as getAllProducts } from "./catalog-C46Q34UE.mjs";
+import { a as require_jsx_runtime, n as useQuery } from "../_libs/react+tanstack__react-query.mjs";
+import { h as Link } from "../_libs/@tanstack/react-router+[...].mjs";
+import { t as Route } from "./katalog._category._subcategory-BOnsnUT0.mjs";
+import { t as formatPrice } from "./format-zQdBECWS.mjs";
+import { N as ArrowLeft, i as Sparkles } from "../_libs/lucide-react.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/katalog._category._subcategory-D-eB8WGQ.js
+var import_jsx_runtime = require_jsx_runtime();
+function CatalogPage() {
+	const { category, subcategory } = Route.useParams();
+	const { data, isLoading, isError } = useQuery({
+		queryKey: [
+			"catalog",
+			category,
+			subcategory
+		],
+		queryFn: async () => {
+			const cat = (await getFullCategories()).find((c) => c.slug === category);
+			if (!cat) return null;
+			const allSubs = cat.subcategories || [];
+			const sub = allSubs.find((s) => s.slug === subcategory);
+			if (!sub) return null;
+			return {
+				cat,
+				sub,
+				allSubs,
+				products: (await getAllProducts()).filter((p) => p.subcategory_id === sub.id)
+			};
+		}
+	});
+	if (isLoading) return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "mx-auto max-w-7xl px-5 py-20",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "h-6 w-32 animate-pulse rounded bg-secondary" }),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "mt-4 h-10 w-72 animate-pulse rounded bg-secondary" }),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3",
+				children: [
+					1,
+					2,
+					3
+				].map((i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "aspect-square animate-pulse rounded-2xl bg-secondary" }, i))
+			})
+		]
+	});
+	if (isError || !data) return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "mx-auto max-w-7xl px-5 py-20 text-center",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
+				className: "font-display text-3xl font-semibold",
+				children: "Katalog Bulunamadı"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "mt-3 text-muted-foreground",
+				children: "Aradığınız katalog bulunamadı veya taşınmış olabilir."
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Link, {
+				to: "/",
+				className: "mt-6 inline-block rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground",
+				children: "Ana Sayfaya Dön"
+			})
+		]
+	});
+	const { cat, sub, allSubs, products } = data;
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "mx-auto max-w-7xl px-5 py-10",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("nav", {
+				className: "flex flex-wrap items-center gap-2 text-sm text-muted-foreground",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Link, {
+						to: "/",
+						className: "hover:text-foreground",
+						children: "Ana Sayfa"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "/" }),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Link, {
+						to: "/kategori/$category",
+						params: { category: cat.slug },
+						className: "hover:text-foreground",
+						children: cat.name
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "/" }),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+						className: "font-medium text-foreground",
+						children: sub.name
+					})
+				]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "mt-6 flex flex-col justify-between gap-4 md:flex-row md:items-end",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Link, {
+						to: "/kategori/$category",
+						params: { category: cat.slug },
+						className: "inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ArrowLeft, { className: "size-3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [cat.name, " Tüm Kategorisi"] })]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
+						className: "mt-2 font-display text-4xl font-semibold tracking-tight sm:text-5xl",
+						children: sub.name
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						className: "mt-2 max-w-2xl text-base text-muted-foreground",
+						children: sub.description || "Almir Mobilya güvencesiyle ölçüye özel üretim modeller."
+					})
+				] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "rounded-full border border-border bg-secondary px-3.5 py-1.5 text-xs font-medium text-foreground",
+					children: [products.length, " Ürün Listeleniyor"]
+				})]
+			}),
+			allSubs.length > 1 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "mt-8 flex flex-wrap items-center gap-2 border-y border-border py-3",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+						className: "text-xs font-semibold uppercase tracking-wider text-muted-foreground mr-1",
+						children: "Diğer Gruplar:"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Link, {
+						to: "/kategori/$category",
+						params: { category: cat.slug },
+						className: "rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground",
+						children: ["Tüm ", cat.name]
+					}),
+					allSubs.map((s) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Link, {
+						to: "/katalog/$category/$subcategory",
+						params: {
+							category: cat.slug,
+							subcategory: s.slug
+						},
+						className: `rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${s.slug === sub.slug ? "bg-ink text-ink-foreground shadow-sm ring-2 ring-primary/20" : "border border-border bg-card text-muted-foreground hover:bg-secondary hover:text-foreground"}`,
+						children: s.name
+					}, s.id))
+				]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3",
+				children: products.map((product) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Link, {
+					to: "/urun/$productId",
+					params: { productId: product.id },
+					className: "group panel overflow-hidden p-3 transition-transform duration-300 hover:-translate-y-1.5",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "relative aspect-square w-full overflow-hidden rounded-xl bg-secondary",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
+							src: product.image_url || sub.image_url || "/images/kategori-dolap.jpg",
+							alt: product.name,
+							width: 900,
+							height: 900,
+							loading: "lazy",
+							className: "h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "absolute left-3 top-3 rounded-full bg-background/90 px-3 py-1 text-[11px] font-semibold text-foreground backdrop-blur-md shadow-sm",
+							children: sub.name
+						})]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "px-2 pt-4 pb-2",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex items-start justify-between gap-2",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
+									className: "font-display text-lg font-semibold leading-snug group-hover:text-primary transition-colors",
+									children: product.name
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+									className: "whitespace-nowrap font-display text-lg font-bold text-primary",
+									children: formatPrice(product.price ? Number(product.price) : null, product.currency)
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "mt-1 line-clamp-2 text-sm text-muted-foreground",
+								children: product.summary || product.description
+							}),
+							Array.isArray(product.materials) && product.materials.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "mt-3 flex flex-wrap gap-1.5",
+								children: product.materials.map((m) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "rounded-md border border-border bg-secondary/70 px-2 py-0.5 text-[11px] font-medium text-muted-foreground",
+									children: m
+								}, m))
+							})
+						]
+					})]
+				}, product.id))
+			}),
+			products.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "my-16 rounded-2xl border border-dashed border-border py-16 text-center",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, { className: "mx-auto size-8 text-muted-foreground/60" }),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						className: "mt-3 text-base font-medium",
+						children: "Bu alt kategoride henüz ürün bulunmuyor."
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						className: "mt-1 text-sm text-muted-foreground",
+						children: "Yeni modeller atölyemizde hazırlanmaktadır."
+					})
+				]
+			})
+		]
+	});
+}
+//#endregion
+export { CatalogPage as component };
