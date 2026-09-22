@@ -1,12 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { FALLBACK_IMAGE, formatPrice } from "@/lib/format";
+import { getProductByIdOrSlug } from "@/lib/catalog";
 import { useAuth } from "@/lib/auth";
 import { notifyAdminsOnNewQuestion } from "@/lib/notifications";
 import { insertMessage } from "@/lib/messages";
 import { AuthModal } from "@/components/AuthModal";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { toast } from "sonner";
 import {
   ChevronLeft,
@@ -58,15 +59,7 @@ function ProductPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["product", productId],
-    queryFn: async () => {
-      const { data: product, error } = await supabase
-        .from("products")
-        .select("*, subcategories(*, categories(*))")
-        .eq("id", productId)
-        .maybeSingle();
-      if (error) throw error;
-      return product;
-    },
+    queryFn: () => getProductByIdOrSlug(productId),
   });
 
   const sendQuestionMutation = useMutation({
@@ -396,6 +389,11 @@ function ProductPage() {
             <p className="mt-1 text-xs text-muted-foreground">
               Ölçü değişikliği, renk kartelası veya özel fiyat taleplerinizi doğrudan atölyemize iletin.
             </p>
+
+            <WhatsAppButton
+              className="mt-4"
+              message={`${data.name} hakkında bilgi almak istiyorum.`}
+            />
 
             {user ? (
               <div className="mt-4 space-y-3">

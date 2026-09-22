@@ -308,14 +308,72 @@ export async function getAllProducts(): Promise<ProductItem[]> {
 }
 
 /**
+ * Ürün detay sayfası: id veya slug ile hem veritabanı hem yerel kayıtlarda arar.
+ */
+export async function getProductByIdOrSlug(productId: string): Promise<ProductItem | null> {
+  const key = decodeURIComponent(productId).trim();
+  if (!key) return null;
+
+  const deletedIds = getDeletedIds();
+  if (deletedIds.has(key)) return null;
+
+  let remote: ProductItem | null = null;
+  try {
+    const byId = await supabase
+      .from("products")
+      .select("*, subcategories(*, categories(*))")
+      .eq("id", key)
+      .maybeSingle();
+
+    if (!byId.error && byId.data) {
+      remote = byId.data as ProductItem;
+    } else {
+      const bySlug = await supabase
+        .from("products")
+        .select("*, subcategories(*, categories(*))")
+        .eq("slug", key)
+        .maybeSingle();
+      if (!bySlug.error && bySlug.data) {
+        remote = bySlug.data as ProductItem;
+      }
+    }
+  } catch (err) {
+    console.warn("[Catalog] Ürün detayı veritabanından alınamadı:", err);
+  }
+
+  const localProds = getStored<ProductItem>(STORAGE_PRODUCTS_KEY).filter((p) => !deletedIds.has(p.id));
+  const local =
+    localProds.find((p) => p.id === key) ||
+    localProds.find((p) => p.slug === key) ||
+    null;
+
+  const product = remote ?? local;
+  if (!product) return null;
+
+  if (!product.subcategories) {
+    const cats = await getFullCategories();
+    for (const cat of cats) {
+      const sub = (cat.subcategories || []).find((s) => s.id === product.subcategory_id);
+      if (sub) {
+        product.subcategories = { ...sub, categories: cat };
+        break;
+      }
+    }
+  }
+
+  return product;
+}
+
+/**
  * Ürün ekleme veya güncelleme
  */
 export async function saveProduct(row: any, id?: string): Promise<ProductItem> {
   const now = new Date().toISOString();
   const prodId = id || generateUUID();
+  const payload = { ...row, id: prodId };
 
   const productItem: ProductItem = {
-    ...row,
+    ...payload,
     id: prodId,
     materials: Array.isArray(row.materials) ? row.materials : [],
     gallery: Array.isArray(row.gallery) ? row.gallery : [],
@@ -325,33 +383,23 @@ export async function saveProduct(row: any, id?: string): Promise<ProductItem> {
   };
 
   try {
-    if (id) {
-      const { data, error } = await supabase
-        .from("products")
-        .update(row)
-        .eq("id", id)
-        .select("*, subcategories(*)")
-        .maybeSingle();
+    const query = id
+      ? supabase.from("products").update(row).eq("id", id)
+      : supabase.from("products").insert(payload);
 
-      if (!error && data) {
-        const current = getStored<ProductItem>(STORAGE_PRODUCTS_KEY);
-        setStored(STORAGE_PRODUCTS_KEY, [...current.filter((p) => p.id !== id), data as ProductItem]);
-        return data as ProductItem;
-      }
-    } else {
-      const { data, error } = await supabase
-        .from("products")
-        .insert(row)
-        .select("*, subcategories(*)")
-        .maybeSingle();
+    const { data, error } = await query.select("*, subcategories(*)").maybeSingle();
 
-      if (!error && data) {
-        const current = getStored<ProductItem>(STORAGE_PRODUCTS_KEY);
-        setStored(STORAGE_PRODUCTS_KEY, [...current.filter((p) => p.id !== (data as any).id), data as ProductItem]);
-        return data as ProductItem;
-      }
+    if (error) {
+      console.warn("[Catalog] Supabase ürün kaydı uyarısı, yerel kaydediliyor:", error.message);
+    } else if (data) {
+      const saved = data as ProductItem;
+      const current = getStored<ProductItem>(STORAGE_PRODUCTS_KEY);
+      setStored(STORAGE_PRODUCTS_KEY, [...current.filter((p) => p.id !== saved.id && p.id !== prodId), saved]);
+      return saved;
     }
-  } catch {}
+  } catch (err) {
+    console.warn("[Catalog] Ürün kaydı veritabanına yazılamadı, yerel kaydediliyor:", err);
+  }
 
   const current = getStored<ProductItem>(STORAGE_PRODUCTS_KEY);
   setStored(STORAGE_PRODUCTS_KEY, [...current.filter((p) => p.id !== prodId), productItem]);

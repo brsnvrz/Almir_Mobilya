@@ -11,6 +11,7 @@ import {
   insertMessageReply,
 } from "@/lib/messages";
 import { AuthModal } from "@/components/AuthModal";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { formatPrice, FALLBACK_IMAGE } from "@/lib/format";
 import { toast } from "sonner";
 import {
@@ -200,9 +201,10 @@ function MessagesPage() {
         <p className="mt-3 text-base text-muted-foreground">
           Almir Mobilya yetkililerine ölçü, fiyat veya özel tasarım sorularınızı iletebilmek ve verilen yanıtları canlı takip edebilmek için Google hesabınızla giriş yapın.
         </p>
+        <WhatsAppButton className="mt-6" />
         <button
           onClick={() => setAuthModalOpen(true)}
-          className="mt-8 rounded-full bg-primary px-8 py-3 font-semibold text-primary-foreground shadow-lg transition-transform hover:scale-105"
+          className="mt-3 rounded-full bg-primary px-8 py-3 font-semibold text-primary-foreground shadow-lg transition-transform hover:scale-105"
         >
           Giriş Yap
         </button>
@@ -251,6 +253,7 @@ function MessagesPage() {
         )}
 
         <div className="mt-4 space-y-3">
+          <WhatsAppButton />
           <input
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
