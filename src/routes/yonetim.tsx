@@ -37,8 +37,13 @@ import {
   Image as ImageIcon,
   Sliders,
   X,
+  Loader2,
+  Upload,
+  UploadCloud,
+  Star,
 } from "lucide-react";
 import { AuthModal } from "@/components/AuthModal";
+import { processImageFile, processMultipleImageFiles } from "@/lib/image-upload";
 
 export const Route = createFileRoute("/yonetim")({
   head: () => ({
@@ -470,6 +475,8 @@ function ProductEditModal({
   const [newGalleryUrl, setNewGalleryUrl] = useState("");
   const [newSpecKey, setNewSpecKey] = useState("");
   const [newSpecVal, setNewSpecVal] = useState("");
+  const [isUploadingMain, setIsUploadingMain] = useState(false);
+  const [isUploadingGallery, setIsUploadingGallery] = useState(false);
 
   const set = (key: keyof ProductFormData) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setForm((f) => ({ ...f, [key]: e.target.value }));
@@ -643,34 +650,122 @@ function ProductEditModal({
 
           {/* Görsel ve Çoklu Galeri Alanı */}
           <div className="rounded-xl border border-border p-4 bg-secondary/20">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-foreground flex items-center gap-1.5">
-              <ImageIcon className="size-4 text-primary" />
-              <span>Görsel ve Çoklu Galeri Yönetimi</span>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-foreground flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <ImageIcon className="size-4 text-primary" />
+                <span>Görsel ve Çoklu Galeri Yönetimi</span>
+              </span>
+              <span className="text-[11px] font-normal text-muted-foreground">
+                (Bulutta kalıcı saklanır)
+              </span>
             </h3>
 
-            <div className="mt-3">
-              <label className="mb-1 block text-xs font-semibold text-muted-foreground">
-                Ana Görsel Bağlantısı (URL)
-              </label>
+            {/* 1. Ana Görsel Seçimi */}
+            <div className="mt-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-muted-foreground">
+                  Ana Kapak Görseli
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    id="main-image-upload"
+                    className="hidden"
+                    disabled={isUploadingMain}
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setIsUploadingMain(true);
+                      try {
+                        toast.info("Ana görsel optimize ediliyor...");
+                        const base64 = await processImageFile(file);
+                        setForm((f) => ({ ...f, image_url: base64 }));
+                        toast.success("Ana görsel başarıyla eklendi.");
+                      } catch (err: any) {
+                        toast.error(err?.message || "Görsel yüklenemedi.");
+                      } finally {
+                        setIsUploadingMain(false);
+                        e.target.value = "";
+                      }
+                    }}
+                  />
+                  <label
+                    htmlFor="main-image-upload"
+                    className="cursor-pointer inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"
+                  >
+                    {isUploadingMain ? (
+                      <Loader2 className="size-3.5 animate-spin" />
+                    ) : (
+                      <Upload className="size-3.5" />
+                    )}
+                    <span>{isUploadingMain ? "Yükleniyor..." : "Galeriden Fotoğraf Seç"}</span>
+                  </label>
+                </div>
+              </div>
+
               <input
                 value={form.image_url}
                 onChange={set("image_url")}
                 className={inputClass}
-                placeholder="https://... veya /images/hero-mutfak.jpg"
+                placeholder="veya internetten resim linki yapıştırın (https://...)"
               />
             </div>
 
-            {/* Galeri Görselleri Listesi */}
+            {/* 2. Ek Galeri Görselleri (Çoklu Fotoğraflar) */}
             <div className="mt-4 border-t border-border pt-3">
-              <label className="mb-1 block text-xs font-semibold text-muted-foreground">
-                Ek Galeri Görselleri (Çoklu Fotoğraflar)
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs font-semibold text-muted-foreground">
+                  Ek Galeri Görselleri (Çoklu Fotoğraflar)
+                </label>
+                <div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    id="gallery-images-upload"
+                    className="hidden"
+                    disabled={isUploadingGallery}
+                    onChange={async (e) => {
+                      const files = e.target.files;
+                      if (!files || files.length === 0) return;
+                      setIsUploadingGallery(true);
+                      try {
+                        toast.info(`${files.length} fotoğraf optimize ediliyor...`);
+                        const base64List = await processMultipleImageFiles(files);
+                        setForm((f) => ({
+                          ...f,
+                          gallery: [...f.gallery, ...base64List],
+                        }));
+                        toast.success(`${base64List.length} fotoğraf galeriye eklendi.`);
+                      } catch (err: any) {
+                        toast.error(err?.message || "Görseller yüklenemedi.");
+                      } finally {
+                        setIsUploadingGallery(false);
+                        e.target.value = "";
+                      }
+                    }}
+                  />
+                  <label
+                    htmlFor="gallery-images-upload"
+                    className="cursor-pointer inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"
+                  >
+                    {isUploadingGallery ? (
+                      <Loader2 className="size-3.5 animate-spin" />
+                    ) : (
+                      <UploadCloud className="size-3.5" />
+                    )}
+                    <span>{isUploadingGallery ? "Optimize ediliyor..." : "Galeriden Çoklu Fotoğraf Seç"}</span>
+                  </label>
+                </div>
+              </div>
+
               <div className="flex gap-2">
                 <input
                   value={newGalleryUrl}
                   onChange={(e) => setNewGalleryUrl(e.target.value)}
                   className={inputClass}
-                  placeholder="Ek görsel URL'si girin…"
+                  placeholder="veya ek görsel linki yapıştırın…"
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault();
@@ -681,35 +776,81 @@ function ProductEditModal({
                 <button
                   type="button"
                   onClick={addGalleryImage}
-                  className="rounded-lg bg-ink px-4 py-2 text-xs font-semibold text-ink-foreground"
+                  className="rounded-lg bg-ink px-4 py-2 text-xs font-semibold text-ink-foreground whitespace-nowrap"
                 >
-                  Galeriye Ekle
+                  Link Ekle
                 </button>
               </div>
 
               {/* Önizleme Thumbnail Dizisi */}
-              <div className="mt-3 flex flex-wrap gap-3">
-                {form.image_url && (
-                  <div className="relative size-16 rounded-lg border-2 border-primary overflow-hidden">
-                    <img src={form.image_url} alt="Ana" className="h-full w-full object-cover" />
-                    <span className="absolute bottom-0 inset-x-0 bg-primary text-[9px] text-center font-bold text-primary-foreground">
-                      Ana
-                    </span>
-                  </div>
-                )}
-                {form.gallery.map((url, idx) => (
-                  <div key={idx} className="group relative size-16 rounded-lg border border-border overflow-hidden">
-                    <img src={url} alt={`Galeri ${idx}`} className="h-full w-full object-cover" />
-                    <button
-                      type="button"
-                      onClick={() => removeGalleryImage(idx)}
-                      className="absolute inset-0 grid place-items-center bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                      title="Görseli kaldır"
+              <div className="mt-4">
+                <p className="text-[11px] font-semibold text-muted-foreground mb-2">
+                  Yüklü Görseller ({form.image_url ? 1 : 0} ana + {form.gallery.length} galeri):
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  {/* Ana Görsel Önizleme */}
+                  {form.image_url && (
+                    <div className="group relative size-20 rounded-xl border-2 border-primary overflow-hidden shadow-sm">
+                      <img src={form.image_url} alt="Ana" className="h-full w-full object-cover" />
+                      <span className="absolute bottom-0 inset-x-0 bg-primary text-[10px] text-center font-bold text-primary-foreground py-0.5">
+                        Ana Görsel
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setForm((f) => ({ ...f, image_url: "" }))}
+                        className="absolute top-1 right-1 size-5 rounded-full bg-black/70 text-white grid place-items-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="Ana görseli kaldır"
+                      >
+                        <X className="size-3" />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Çoklu Galeri Thumbnail'leri */}
+                  {form.gallery.map((url, idx) => (
+                    <div
+                      key={idx}
+                      className="group relative size-20 rounded-xl border border-border overflow-hidden bg-background shadow-xs hover:border-primary transition-all"
                     >
-                      <X className="size-4" />
-                    </button>
-                  </div>
-                ))}
+                      <img src={url} alt={`Galeri ${idx + 1}`} className="h-full w-full object-cover" />
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            // Bu görseli ana görsel yap, eskisini galeriye al
+                            const oldMain = form.image_url;
+                            const newGallery = form.gallery.filter((_, i) => i !== idx);
+                            if (oldMain) newGallery.unshift(oldMain);
+                            setForm((f) => ({
+                              ...f,
+                              image_url: url,
+                              gallery: newGallery,
+                            }));
+                            toast.success("Görsel ana kapak yapıldı.");
+                          }}
+                          className="size-7 rounded-full bg-white/20 hover:bg-white/40 text-white grid place-items-center transition-colors"
+                          title="Ana Görsel Yap"
+                        >
+                          <Star className="size-3.5 fill-amber-400 text-amber-400" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => removeGalleryImage(idx)}
+                          className="size-7 rounded-full bg-destructive/80 hover:bg-destructive text-white grid place-items-center transition-colors"
+                          title="Görseli kaldır"
+                        >
+                          <X className="size-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+
+                  {!form.image_url && form.gallery.length === 0 && (
+                    <div className="w-full py-6 text-center border border-dashed border-border rounded-xl text-xs text-muted-foreground">
+                      Henüz görsel eklenmedi. Yukarıdaki butonlardan galerinizden fotoğraf seçebilirsiniz.
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
