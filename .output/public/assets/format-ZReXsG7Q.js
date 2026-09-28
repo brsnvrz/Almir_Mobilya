@@ -1,1 +1,0 @@
-function e(e,t=`TRY`){return e==null?`Fiyat için sorun`:new Intl.NumberFormat(`tr-TR`,{style:`currency`,currency:t,maximumFractionDigits:0}).format(e)}var t=`/images/kategori-dolap.jpg`;export{e as n,t};

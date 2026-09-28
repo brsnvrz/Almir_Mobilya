@@ -1,4 +1,14 @@
-import { supabase } from "@/integrations/supabase/client";
+import {
+  getFullCategoriesFn,
+  getAllProductsFn,
+  getProductByIdOrSlugFn,
+  saveProductFn,
+  removeProductFn,
+  saveCategoryFn,
+  removeCategoryFn,
+  saveSubcategoryFn,
+  removeSubcategoryFn,
+} from "./server-catalog";
 
 export type CategoryItem = {
   id: string;
@@ -56,17 +66,6 @@ const STORAGE_SUBCATEGORIES_KEY = "almir_custom_subcategories";
 const STORAGE_PRODUCTS_KEY = "almir_custom_products";
 const STORAGE_DELETED_KEY = "almir_deleted_ids";
 
-function generateUUID(): string {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-    return crypto.randomUUID();
-  }
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === "x" ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
-}
-
 function getStored<T>(key: string): T[] {
   if (typeof window === "undefined") return [];
   try {
@@ -96,106 +95,49 @@ function addDeletedId(id: string) {
   }
 }
 
+function notifyCatalogChanged() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("almir-catalog-changed"));
+  }
+}
+
 /**
- * Tüm ana ve alt kategorileri getirir (Supabase + Yerel eklemeler)
+ * Tüm ana ve alt kategorileri getirir (Neon PostgreSQL)
  */
 export async function getFullCategories(): Promise<CategoryItem[]> {
-  const deletedIds = getDeletedIds();
-  const localCats = getStored<CategoryItem>(STORAGE_CATEGORIES_KEY).filter((c) => !deletedIds.has(c.id));
-  const localSubs = getStored<SubcategoryItem>(STORAGE_SUBCATEGORIES_KEY).filter((s) => !deletedIds.has(s.id));
-
-  let remoteCats: CategoryItem[] = [];
   try {
-    const { data, error } = await supabase
-      .from("categories")
-      .select("*, subcategories(*)")
-      .order("sort_order");
-
-    if (!error && Array.isArray(data)) {
-      remoteCats = (data as CategoryItem[]).filter((c) => !deletedIds.has(c.id));
+    const data = await getFullCategoriesFn();
+    if (Array.isArray(data) && data.length > 0) {
+      return data as CategoryItem[];
     }
   } catch (err) {
-    console.warn("[Catalog] Supabase kategoriler çekilirken hata:", err);
+    console.warn("[Catalog] Neon kategoriler çekilirken hata:", err);
   }
 
-  // Birleştir
-  const catMap = new Map<string, CategoryItem>();
-  for (const c of remoteCats) {
-    const activeSubs = (c.subcategories || []).filter((s) => !deletedIds.has(s.id));
-    catMap.set(c.id, { ...c, subcategories: activeSubs });
-  }
-  for (const c of localCats) {
-    const existing = catMap.get(c.id);
-    const existingSubs = existing?.subcategories || [];
-    catMap.set(c.id, {
-      ...c,
-      subcategories: existingSubs,
-    });
-  }
-
-  // Yerel alt kategorileri ilgili ana kategorilere iliştir
-  for (const s of localSubs) {
-    const cat = catMap.get(s.category_id);
-    if (cat) {
-      const subs = cat.subcategories || [];
-      if (!subs.some((item) => item.id === s.id)) {
-        cat.subcategories = [...subs, s];
-      }
-    }
-  }
-
-  return Array.from(catMap.values()).sort((a, b) => a.sort_order - b.sort_order);
+  // Fallback to local storage if network error
+  const deletedIds = getDeletedIds();
+  return getStored<CategoryItem>(STORAGE_CATEGORIES_KEY).filter((c) => !deletedIds.has(c.id));
 }
 
 /**
  * Ana kategori ekleme
  */
 export async function createCategory(payload: {
+  id?: string;
   name: string;
   slug: string;
   description?: string | null;
   image_url?: string | null;
   sort_order?: number;
 }): Promise<CategoryItem> {
-  const id = generateUUID();
-  const now = new Date().toISOString();
-  const newCat: CategoryItem = {
-    id,
-    name: payload.name.trim(),
-    slug: payload.slug.trim(),
-    description: payload.description || null,
-    image_url: payload.image_url || null,
-    sort_order: payload.sort_order ?? 99,
-    created_at: now,
-    updated_at: now,
-    subcategories: [],
-  };
-
   try {
-    const { data, error } = await supabase.from("categories").insert({
-      name: newCat.name,
-      slug: newCat.slug,
-      description: newCat.description,
-      image_url: newCat.image_url,
-      sort_order: newCat.sort_order,
-    }).select().maybeSingle();
-
-    if (error) {
-      console.warn("[Catalog] Supabase kategori ekleme RLS uyarısı, yerel kaydediliyor:", error.message);
-      const current = getStored<CategoryItem>(STORAGE_CATEGORIES_KEY);
-      setStored(STORAGE_CATEGORIES_KEY, [...current.filter((c) => c.id !== newCat.id), newCat]);
-      return newCat;
-    }
-    if (data) {
-      const current = getStored<CategoryItem>(STORAGE_CATEGORIES_KEY);
-      setStored(STORAGE_CATEGORIES_KEY, [...current.filter((c) => c.id !== (data as any).id), data as CategoryItem]);
-      return data as CategoryItem;
-    }
-  } catch {}
-
-  const current = getStored<CategoryItem>(STORAGE_CATEGORIES_KEY);
-  setStored(STORAGE_CATEGORIES_KEY, [...current.filter((c) => c.id !== newCat.id), newCat]);
-  return newCat;
+    const saved = await saveCategoryFn({ data: payload });
+    notifyCatalogChanged();
+    return saved as CategoryItem;
+  } catch (err) {
+    console.error("[Catalog] Kategori kaydedilemedi:", err);
+    throw err;
+  }
 }
 
 /**
@@ -203,18 +145,22 @@ export async function createCategory(payload: {
  */
 export async function removeCategory(id: string) {
   try {
-    await supabase.from("categories").delete().eq("id", id);
-  } catch {}
+    await removeCategoryFn({ data: id });
+  } catch (err) {
+    console.warn("[Catalog] Kategori Neon'dan silinemedi:", err);
+  }
 
   addDeletedId(id);
   const current = getStored<CategoryItem>(STORAGE_CATEGORIES_KEY);
   setStored(STORAGE_CATEGORIES_KEY, current.filter((c) => c.id !== id));
+  notifyCatalogChanged();
 }
 
 /**
  * Alt kategori ekleme
  */
 export async function createSubcategory(payload: {
+  id?: string;
   category_id: string;
   name: string;
   slug: string;
@@ -222,46 +168,14 @@ export async function createSubcategory(payload: {
   image_url?: string | null;
   sort_order?: number;
 }): Promise<SubcategoryItem> {
-  const id = generateUUID();
-  const now = new Date().toISOString();
-  const newSub: SubcategoryItem = {
-    id,
-    category_id: payload.category_id,
-    name: payload.name.trim(),
-    slug: payload.slug.trim(),
-    description: payload.description || null,
-    image_url: payload.image_url || null,
-    sort_order: payload.sort_order ?? 99,
-    created_at: now,
-    updated_at: now,
-  };
-
   try {
-    const { data, error } = await supabase.from("subcategories").insert({
-      category_id: newSub.category_id,
-      name: newSub.name,
-      slug: newSub.slug,
-      description: newSub.description,
-      image_url: newSub.image_url,
-      sort_order: newSub.sort_order,
-    }).select().maybeSingle();
-
-    if (error) {
-      console.warn("[Catalog] Supabase alt kategori ekleme RLS uyarısı, yerel kaydediliyor:", error.message);
-      const current = getStored<SubcategoryItem>(STORAGE_SUBCATEGORIES_KEY);
-      setStored(STORAGE_SUBCATEGORIES_KEY, [...current.filter((s) => s.id !== newSub.id), newSub]);
-      return newSub;
-    }
-    if (data) {
-      const current = getStored<SubcategoryItem>(STORAGE_SUBCATEGORIES_KEY);
-      setStored(STORAGE_SUBCATEGORIES_KEY, [...current.filter((s) => s.id !== (data as any).id), data as SubcategoryItem]);
-      return data as SubcategoryItem;
-    }
-  } catch {}
-
-  const current = getStored<SubcategoryItem>(STORAGE_SUBCATEGORIES_KEY);
-  setStored(STORAGE_SUBCATEGORIES_KEY, [...current.filter((s) => s.id !== newSub.id), newSub]);
-  return newSub;
+    const saved = await saveSubcategoryFn({ data: payload });
+    notifyCatalogChanged();
+    return saved as SubcategoryItem;
+  } catch (err) {
+    console.error("[Catalog] Alt kategori kaydedilemedi:", err);
+    throw err;
+  }
 }
 
 /**
@@ -269,141 +183,75 @@ export async function createSubcategory(payload: {
  */
 export async function removeSubcategory(id: string) {
   try {
-    await supabase.from("subcategories").delete().eq("id", id);
-  } catch {}
+    await removeSubcategoryFn({ data: id });
+  } catch (err) {
+    console.warn("[Catalog] Alt kategori Neon'dan silinemedi:", err);
+  }
 
   addDeletedId(id);
   const current = getStored<SubcategoryItem>(STORAGE_SUBCATEGORIES_KEY);
   setStored(STORAGE_SUBCATEGORIES_KEY, current.filter((s) => s.id !== id));
+  notifyCatalogChanged();
 }
 
 /**
- * Tüm ürünleri getirir (Supabase + Yerel)
+ * Tüm ürünleri getirir (Neon PostgreSQL)
  */
 export async function getAllProducts(): Promise<ProductItem[]> {
-  const deletedIds = getDeletedIds();
-  const localProds = getStored<ProductItem>(STORAGE_PRODUCTS_KEY).filter((p) => !deletedIds.has(p.id));
-
-  let remoteProds: ProductItem[] = [];
   try {
-    const { data, error } = await supabase
-      .from("products")
-      .select("*, subcategories(*)")
-      .order("created_at", { ascending: false });
-
-    if (!error && Array.isArray(data)) {
-      remoteProds = (data as ProductItem[]).filter((p) => !deletedIds.has(p.id));
+    const remoteProds = await getAllProductsFn();
+    if (Array.isArray(remoteProds)) {
+      return remoteProds as ProductItem[];
     }
-  } catch {}
-
-  const map = new Map<string, ProductItem>();
-  for (const p of remoteProds) {
-    map.set(p.id, p);
-  }
-  for (const p of localProds) {
-    map.set(p.id, p);
+  } catch (err) {
+    console.warn("[Catalog] Ürünler Neon veritabanından çekilemedi:", err);
   }
 
-  return Array.from(map.values());
+  const deletedIds = getDeletedIds();
+  return getStored<ProductItem>(STORAGE_PRODUCTS_KEY).filter((p) => !deletedIds.has(p.id));
 }
 
 /**
- * Ürün detay sayfası: id veya slug ile hem veritabanı hem yerel kayıtlarda arar.
+ * Ürün detay sayfası: id veya slug ile veritabanında arar.
  */
 export async function getProductByIdOrSlug(productId: string): Promise<ProductItem | null> {
   const key = decodeURIComponent(productId).trim();
   if (!key) return null;
 
-  const deletedIds = getDeletedIds();
-  if (deletedIds.has(key)) return null;
-
-  let remote: ProductItem | null = null;
   try {
-    const byId = await supabase
-      .from("products")
-      .select("*, subcategories(*, categories(*))")
-      .eq("id", key)
-      .maybeSingle();
-
-    if (!byId.error && byId.data) {
-      remote = byId.data as ProductItem;
-    } else {
-      const bySlug = await supabase
-        .from("products")
-        .select("*, subcategories(*, categories(*))")
-        .eq("slug", key)
-        .maybeSingle();
-      if (!bySlug.error && bySlug.data) {
-        remote = bySlug.data as ProductItem;
-      }
+    const item = await getProductByIdOrSlugFn({ data: key });
+    if (item) {
+      return item as ProductItem;
     }
   } catch (err) {
     console.warn("[Catalog] Ürün detayı veritabanından alınamadı:", err);
   }
 
+  const deletedIds = getDeletedIds();
+  if (deletedIds.has(key)) return null;
+
   const localProds = getStored<ProductItem>(STORAGE_PRODUCTS_KEY).filter((p) => !deletedIds.has(p.id));
-  const local =
+  return (
     localProds.find((p) => p.id === key) ||
     localProds.find((p) => p.slug === key) ||
-    null;
-
-  const product = remote ?? local;
-  if (!product) return null;
-
-  if (!product.subcategories) {
-    const cats = await getFullCategories();
-    for (const cat of cats) {
-      const sub = (cat.subcategories || []).find((s) => s.id === product.subcategory_id);
-      if (sub) {
-        product.subcategories = { ...sub, categories: cat };
-        break;
-      }
-    }
-  }
-
-  return product;
+    null
+  );
 }
 
 /**
- * Ürün ekleme veya güncelleme
+ * Ürün ekleme veya güncelleme (Neon PostgreSQL)
  */
 export async function saveProduct(row: any, id?: string): Promise<ProductItem> {
-  const now = new Date().toISOString();
-  const prodId = id || generateUUID();
-  const payload = { ...row, id: prodId };
-
-  const productItem: ProductItem = {
-    ...payload,
-    id: prodId,
-    materials: Array.isArray(row.materials) ? row.materials : [],
-    gallery: Array.isArray(row.gallery) ? row.gallery : [],
-    extra_specs: row.extra_specs || {},
-    created_at: now,
-    updated_at: now,
-  };
+  const payload = { ...row, ...(id ? { id } : {}) };
 
   try {
-    const query = id
-      ? supabase.from("products").update(row).eq("id", id)
-      : supabase.from("products").insert(payload);
-
-    const { data, error } = await query.select("*, subcategories(*)").maybeSingle();
-
-    if (error) {
-      console.warn("[Catalog] Supabase ürün kaydı uyarısı, yerel kaydediliyor:", error.message);
-    } else if (data) {
-      const saved = data as ProductItem;
-      const current = getStored<ProductItem>(STORAGE_PRODUCTS_KEY);
-      setStored(STORAGE_PRODUCTS_KEY, [...current.filter((p) => p.id !== saved.id && p.id !== prodId), saved]);
-      return saved;
-    }
+    const saved = await saveProductFn({ data: payload });
+    notifyCatalogChanged();
+    return saved as ProductItem;
   } catch (err) {
-    console.warn("[Catalog] Ürün kaydı veritabanına yazılamadı, yerel kaydediliyor:", err);
+    console.error("[Catalog] Ürün Neon veritabanına kaydedilemedi:", err);
+    throw err;
   }
-
-  const current = getStored<ProductItem>(STORAGE_PRODUCTS_KEY);
-  setStored(STORAGE_PRODUCTS_KEY, [...current.filter((p) => p.id !== prodId), productItem]);
-  return productItem;
 }
 
 /**
@@ -411,12 +259,15 @@ export async function saveProduct(row: any, id?: string): Promise<ProductItem> {
  */
 export async function removeProduct(id: string) {
   try {
-    await supabase.from("products").delete().eq("id", id);
-  } catch {}
+    await removeProductFn({ data: id });
+  } catch (err) {
+    console.warn("[Catalog] Ürün Neon'dan silinemedi:", err);
+  }
 
   addDeletedId(id);
   const current = getStored<ProductItem>(STORAGE_PRODUCTS_KEY);
   setStored(STORAGE_PRODUCTS_KEY, current.filter((p) => p.id !== id));
+  notifyCatalogChanged();
 }
 
 /**

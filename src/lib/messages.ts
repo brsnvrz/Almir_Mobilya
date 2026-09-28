@@ -1,4 +1,10 @@
-import { supabase } from "@/integrations/supabase/client";
+import {
+  getMessagesFn,
+  getMessageRepliesFn,
+  insertMessageFn,
+  insertMessageReplyFn,
+  updateMessageStatusFn,
+} from "./server-messages";
 
 export type MessageItem = {
   id: string;
@@ -93,8 +99,7 @@ function notifyMessageChannel() {
 }
 
 /**
- * Mesaj oluşturma: Öncelikle Supabase'e yazmayı dener.
- * Eğer RLS politikası (401 / code 42501) engellerse, güvenli yerel depolamaya yazar ve akışı kesmez.
+ * Mesaj oluşturma: Neon PostgreSQL'e kaydeder.
  */
 export async function insertMessage(payload: {
   user_id: string;
@@ -129,35 +134,27 @@ export async function insertMessage(payload: {
   };
 
   try {
-    const { data, error } = await supabase
-      .from("messages")
-      .insert({
+    const saved = await insertMessageFn({
+      data: {
         user_id: payload.user_id,
         user_email: payload.user_email ?? null,
         user_name: payload.user_name ?? null,
         subject: payload.subject ?? null,
         body: payload.body.trim(),
         product_id: payload.product_id ?? null,
-      })
-      .select("*, products(id, name, image_url, price, currency)")
-      .maybeSingle();
+      },
+    });
 
-    if (error) {
-      console.warn("[Messages] Supabase yazma uyarısı (yerel depolama kullanılacak):", error.message);
-      // Yerel listeye ekle
-      const current = getStoredMessages();
-      saveStoredMessages([newMsg, ...current.filter((m) => m.id !== newMsg.id)]);
-      return newMsg;
-    }
-
-    if (data) {
-      // Başarılı Supabase kaydı, yerel yedeklemeyi de güncelle
-      const current = getStoredMessages();
-      saveStoredMessages([data as MessageItem, ...current.filter((m) => m.id !== (data as any).id)]);
-      return data as MessageItem;
+    if (saved) {
+      const item: MessageItem = {
+        ...(saved as MessageItem),
+        products: payload.product ?? null,
+      };
+      notifyMessageChannel();
+      return item;
     }
   } catch (err: any) {
-    console.warn("[Messages] Supabase bağlantı hatası (yerel depolama kullanılacak):", err?.message);
+    console.warn("[Messages] Neon yazma uyarısı, yerel depolanıyor:", err?.message);
   }
 
   // Fallback
@@ -167,36 +164,30 @@ export async function insertMessage(payload: {
 }
 
 /**
- * Mesajları listeleme: Supabase'den çekilenler ile yerel depolamadaki mesajları birleştirir.
+ * Mesajları listeleme: Neon PostgreSQL'den çeker.
  */
 export async function getMessages(options?: {
   userId?: string | null;
   userEmail?: string | null;
   isAdmin?: boolean;
 }): Promise<MessageItem[]> {
-  const localItems = getStoredMessages();
   let remoteItems: MessageItem[] = [];
 
   try {
-    const { data, error } = await supabase
-      .from("messages")
-      .select("*, products(id, name, image_url, price, currency)")
-      .order("created_at", { ascending: false });
-
-    if (!error && Array.isArray(data)) {
+    const data = await getMessagesFn();
+    if (Array.isArray(data)) {
       remoteItems = data as MessageItem[];
     }
   } catch (err) {
-    console.warn("[Messages] Supabase mesaj okuma uyarısı:", err);
+    console.warn("[Messages] Neon mesaj okuma uyarısı:", err);
   }
 
-  // ID'ye göre birleştir (remote öncelikli, yoksa local)
+  const localItems = getStoredMessages();
   const map = new Map<string, MessageItem>();
   for (const item of localItems) {
     map.set(item.id, item);
   }
   for (const item of remoteItems) {
-    // remote'da products null gelmişse local'dekini koru
     const existing = map.get(item.id);
     map.set(item.id, {
       ...item,
@@ -208,7 +199,6 @@ export async function getMessages(options?: {
     (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
 
-  // Eğer admin değilse sadece kendi mesajlarını görsün
   if (!options?.isAdmin) {
     const uid = options?.userId?.toLowerCase();
     const uemail = options?.userEmail?.toLowerCase().trim();
@@ -226,21 +216,18 @@ export async function getMessages(options?: {
  * Mesaj yanıtlarını çekme
  */
 export async function getMessageReplies(messageId: string): Promise<MessageReplyItem[]> {
-  const localReplies = getStoredReplies().filter((r) => r.message_id === messageId);
   let remoteReplies: MessageReplyItem[] = [];
 
   try {
-    const { data, error } = await supabase
-      .from("message_replies")
-      .select("*")
-      .eq("message_id", messageId)
-      .order("created_at");
-
-    if (!error && Array.isArray(data)) {
+    const data = await getMessageRepliesFn({ data: messageId });
+    if (Array.isArray(data)) {
       remoteReplies = data as MessageReplyItem[];
     }
-  } catch {}
+  } catch (err) {
+    console.warn("[Messages] Neon yanıt çekme hatası:", err);
+  }
 
+  const localReplies = getStoredReplies().filter((r) => r.message_id === messageId);
   const map = new Map<string, MessageReplyItem>();
   for (const r of localReplies) {
     map.set(r.id, r);
@@ -275,30 +262,22 @@ export async function insertMessageReply(payload: {
   };
 
   try {
-    const { data, error } = await supabase
-      .from("message_replies")
-      .insert({
-        message_id: payload.message_id,
-        author_id: payload.author_id,
-        author_name: payload.author_name ?? null,
-        from_admin: payload.from_admin,
-        body: payload.body.trim(),
-      })
-      .select()
-      .maybeSingle();
-
-    if (!error && data) {
-      const current = getStoredReplies();
-      saveStoredReplies([...current.filter((r) => r.id !== (data as any).id), data as MessageReplyItem]);
-      return data as MessageReplyItem;
+    const saved = await insertMessageReplyFn({ data: payload });
+    if (saved) {
+      if (payload.from_admin) {
+        await updateMessageStatus(payload.message_id, "answered");
+      }
+      notifyMessageChannel();
+      return saved as MessageReplyItem;
     }
-  } catch {}
+  } catch (err) {
+    console.warn("[Messages] Neon yanıt ekleme hatası:", err);
+  }
 
   // Fallback to local
   const currentReplies = getStoredReplies();
   saveStoredReplies([...currentReplies.filter((r) => r.id !== newReply.id), newReply]);
 
-  // Eğer admin yanıt verdiyse mesajın durumunu 'answered' yap
   if (payload.from_admin) {
     await updateMessageStatus(payload.message_id, "answered");
   }
@@ -311,8 +290,10 @@ export async function insertMessageReply(payload: {
  */
 export async function updateMessageStatus(messageId: string, status: "open" | "answered") {
   try {
-    await supabase.from("messages").update({ status }).eq("id", messageId);
-  } catch {}
+    await updateMessageStatusFn({ data: { id: messageId, status } });
+  } catch (err) {
+    console.warn("[Messages] Neon durum güncelleme hatası:", err);
+  }
 
   const current = getStoredMessages();
   const updated = current.map((m) => (m.id === messageId ? { ...m, status, updated_at: new Date().toISOString() } : m));
