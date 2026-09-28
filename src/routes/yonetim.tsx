@@ -41,9 +41,12 @@ import {
   Upload,
   UploadCloud,
   Star,
+  FileText,
+  Download,
 } from "lucide-react";
 import { AuthModal } from "@/components/AuthModal";
 import { processImageFile, processMultipleImageFiles } from "@/lib/image-upload";
+import { getPdfDocumentFn, savePdfDocumentFn } from "@/lib/server-documents";
 
 export const Route = createFileRoute("/yonetim")({
   head: () => ({
@@ -64,6 +67,72 @@ function AdminPage() {
   const { user, isAdmin, loading } = useAuth();
   const [tab, setTab] = useState<Tab>("urunler");
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+  const [isUploadingPdf, setIsUploadingPdf] = useState(false);
+
+  const handleDownloadPdf = async () => {
+    setIsDownloadingPdf(true);
+    try {
+      const doc = await getPdfDocumentFn({ data: "yenilikler_pdf" });
+      if (!doc || !doc.data) {
+        toast.info("Henüz bir yenilikler PDF'i yüklenmedi.");
+        return;
+      }
+      const link = document.createElement("a");
+      link.href = doc.data;
+      link.download = doc.filename || "Almir_Mobilya_Yenilikler.pdf";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success("Yenilikler PDF'i indirildi.");
+    } catch (err: any) {
+      toast.error("PDF indirilemedi: " + (err?.message || "Hata"));
+    } finally {
+      setIsDownloadingPdf(false);
+    }
+  };
+
+  const handleUploadPdf = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+      toast.error("Lütfen bir PDF dosyası seçiniz.");
+      return;
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      toast.error("Dosya boyutu 20 MB'dan küçük olmalıdır.");
+      return;
+    }
+
+    setIsUploadingPdf(true);
+    try {
+      toast.info("PDF yükleniyor...");
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const base64Data = reader.result as string;
+          await savePdfDocumentFn({
+            data: {
+              key: "yenilikler_pdf",
+              filename: file.name,
+              data: base64Data,
+            },
+          });
+          toast.success("Yenilikler PDF'i başarıyla kaydedildi.");
+        } catch (err: any) {
+          toast.error("Kayıt başarısız: " + (err?.message || "Hata"));
+        } finally {
+          setIsUploadingPdf(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (err: any) {
+      toast.error("Dosya okunamadı: " + (err?.message || "Hata"));
+      setIsUploadingPdf(false);
+    } finally {
+      e.target.value = "";
+    }
+  };
 
   if (loading) {
     return (
@@ -125,6 +194,45 @@ function AdminPage() {
           <p className="text-xs text-muted-foreground">
             Oturum açan: <span className="font-medium text-foreground">{user.email}</span>
           </p>
+        </div>
+
+        {/* ORTA: Yenilikleri Gör ve Gizli/Sade PDF Yükleme Butonu */}
+        <div className="flex items-center gap-2 self-start sm:self-center">
+          <button
+            type="button"
+            onClick={handleDownloadPdf}
+            disabled={isDownloadingPdf}
+            className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-xs font-semibold text-primary hover:bg-primary hover:text-primary-foreground transition-all shadow-xs active:scale-95"
+            title="Yüklü olan yenilikler PDF'ini indir"
+          >
+            {isDownloadingPdf ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <FileText className="size-3.5" />
+            )}
+            <span>{isDownloadingPdf ? "İndiriliyor..." : "Yenilikleri Gör"}</span>
+          </button>
+
+          {/* Göz önünde durmayan, küçük, sade PDF yükleme butonu */}
+          <input
+            type="file"
+            accept="application/pdf"
+            id="changelog-pdf-upload"
+            className="hidden"
+            disabled={isUploadingPdf}
+            onChange={handleUploadPdf}
+          />
+          <label
+            htmlFor="changelog-pdf-upload"
+            title="Yenilikler PDF'i Yükle / Güncelle"
+            className="cursor-pointer size-8 rounded-full border border-border/50 bg-secondary/30 hover:bg-secondary text-muted-foreground/50 hover:text-foreground grid place-items-center transition-all opacity-60 hover:opacity-100 hover:scale-105"
+          >
+            {isUploadingPdf ? (
+              <Loader2 className="size-3.5 animate-spin text-primary" />
+            ) : (
+              <UploadCloud className="size-3.5" />
+            )}
+          </label>
         </div>
 
         {/* Sekme Butonları */}
