@@ -75,7 +75,8 @@ function AdminPage() {
     try {
       const doc = await getPdfDocumentFn({ data: "yenilikler_pdf" });
       if (!doc || !doc.data) {
-        toast.info("Henüz bir yenilikler PDF'i yüklenmedi.");
+        toast.info("Henüz bir yenilikler PDF'i yüklenmedi. Yüklemek için dosya seçiniz.");
+        document.getElementById("changelog-pdf-upload")?.click();
         return;
       }
       const link = document.createElement("a");
@@ -196,24 +197,27 @@ function AdminPage() {
           </p>
         </div>
 
-        {/* ORTA: Yenilikleri Gör ve Gizli/Sade PDF Yükleme Butonu */}
-        <div className="flex items-center gap-2 self-start sm:self-center">
+        {/* ORTA: Yenilikleri Gör Butonu */}
+        <div className="flex items-center self-start sm:self-center">
           <button
             type="button"
             onClick={handleDownloadPdf}
             disabled={isDownloadingPdf}
-            className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-xs font-semibold text-primary hover:bg-primary hover:text-primary-foreground transition-all shadow-xs active:scale-95"
-            title="Yüklü olan yenilikler PDF'ini indir"
+            className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-5 py-2.5 text-xs font-semibold text-primary hover:bg-primary hover:text-primary-foreground transition-all shadow-xs active:scale-95"
+            title="Yüklü olan yenilikler PDF belgesini indir"
           >
             {isDownloadingPdf ? (
-              <Loader2 className="size-3.5 animate-spin" />
+              <Loader2 className="size-4 animate-spin" />
             ) : (
-              <FileText className="size-3.5" />
+              <FileText className="size-4" />
             )}
             <span>{isDownloadingPdf ? "İndiriliyor..." : "Yenilikleri Gör"}</span>
           </button>
+        </div>
 
-          {/* Göz önünde durmayan, küçük, sade PDF yükleme butonu */}
+        {/* SAĞ: Sekme Butonları ve Göz Önünde Olmayan PDF Yükleme Butonu */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Çok göz önünde durmayan, sade ve şık PDF Yükleme Butonu */}
           <input
             type="file"
             accept="application/pdf"
@@ -224,19 +228,16 @@ function AdminPage() {
           />
           <label
             htmlFor="changelog-pdf-upload"
-            title="Yenilikler PDF'i Yükle / Güncelle"
-            className="cursor-pointer size-8 rounded-full border border-border/50 bg-secondary/30 hover:bg-secondary text-muted-foreground/50 hover:text-foreground grid place-items-center transition-all opacity-60 hover:opacity-100 hover:scale-105"
+            title="Yenilikler PDF'i Yükle veya Güncelle"
+            className="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-secondary/40 px-3 py-1.5 text-[11px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground cursor-pointer transition-all shadow-2xs mr-1"
           >
             {isUploadingPdf ? (
-              <Loader2 className="size-3.5 animate-spin text-primary" />
+              <Loader2 className="size-3 animate-spin text-primary" />
             ) : (
-              <UploadCloud className="size-3.5" />
+              <UploadCloud className="size-3" />
             )}
+            <span>{isUploadingPdf ? "Yükleniyor..." : "PDF Belgesi Yükle"}</span>
           </label>
-        </div>
-
-        {/* Sekme Butonları */}
-        <div className="flex flex-wrap gap-2">
           {(
             [
               ["urunler", "Ürünler", Package],
