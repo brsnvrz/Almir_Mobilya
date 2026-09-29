@@ -33,14 +33,6 @@ export function SiteFooter() {
               <span>0535 687 15 42</span>
             </a>
 
-            <a
-              href="mailto:osmanndemir16@gmail.com?subject=Almir%20Mobilya%20Bilgi%20Talebi"
-              className="flex items-center gap-1.5 opacity-85 transition-all hover:opacity-100 hover:text-red-400"
-              title="Gmail ile e-posta gönder"
-            >
-              <Mail className="size-3.5 text-red-400" />
-              <span>Gmail (osmanndemir16@gmail.com)</span>
-            </a>
 
             <Link
               to="/mesajlar"
