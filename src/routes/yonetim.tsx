@@ -49,6 +49,9 @@ import { processImageFile, processMultipleImageFiles } from "@/lib/image-upload"
 import { getPdfDocumentFn, savePdfDocumentFn } from "@/lib/server-documents";
 
 export const Route = createFileRoute("/yonetim")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    edit: typeof search.edit === "string" ? search.edit : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Yönetim Paneli — Almir Mobilya" },
@@ -65,6 +68,7 @@ type Tab = "urunler" | "kategoriler" | "mesajlar";
 
 function AdminPage() {
   const { user, isAdmin, loading } = useAuth();
+  const { edit: editProductId } = Route.useSearch();
   const [tab, setTab] = useState<Tab>("urunler");
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
@@ -263,7 +267,7 @@ function AdminPage() {
 
       {/* Sekme İçerikleri */}
       <div className="mt-8">
-        {tab === "urunler" && <ProductsAdminSection />}
+        {tab === "urunler" && <ProductsAdminSection editProductId={editProductId} />}
         {tab === "kategoriler" && <CategoriesAdminSection />}
         {tab === "mesajlar" && <MessagesAdminSection />}
       </div>
@@ -318,12 +322,13 @@ const emptyProductForm: ProductFormData = {
   extra_specs: {},
 };
 
-function ProductsAdminSection() {
+function ProductsAdminSection({ editProductId }: { editProductId?: string }) {
   const queryClient = useQueryClient();
   const [selectedSubId, setSelectedSubId] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [editingProduct, setEditingProduct] = useState<ProductFormData | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [autoOpenDone, setAutoOpenDone] = useState(false);
 
   // Kategoriler ve Alt Kategorileri Çek
   const { data: categories } = useQuery({
@@ -409,6 +414,36 @@ function ProductsAdminSection() {
       p.slug.toLowerCase().includes(search.toLowerCase());
     return matchSub && matchSearch;
   });
+
+  // URL'de ?edit=<id> varsa ürün listesi gelince otomatik düzenleme formunu aç
+  useEffect(() => {
+    if (!editProductId || autoOpenDone || !products) return;
+    const p = products.find((x) => x.id === editProductId);
+    if (!p) return;
+    setEditingProduct({
+      id: p.id,
+      subcategory_id: p.subcategory_id,
+      name: p.name,
+      slug: p.slug,
+      summary: p.summary || "",
+      description: p.description || "",
+      materials: Array.isArray(p.materials) ? p.materials.join(", ") : "",
+      width_cm: p.width_cm || "",
+      height_cm: p.height_cm || "",
+      depth_cm: p.depth_cm || "",
+      weight: p.weight || "",
+      warranty: p.warranty || "",
+      delivery_time: p.delivery_time || "",
+      production_place: p.production_place || "",
+      price: p.price ? String(p.price) : "",
+      currency: p.currency || "TRY",
+      image_url: p.image_url || "",
+      gallery: Array.isArray(p.gallery) ? p.gallery : [],
+      extra_specs: (p.extra_specs as Record<string, string>) || {},
+    });
+    setIsFormOpen(true);
+    setAutoOpenDone(true);
+  }, [editProductId, products, autoOpenDone]);
 
   return (
     <div>

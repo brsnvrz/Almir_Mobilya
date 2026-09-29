@@ -23,6 +23,7 @@ import {
   ShieldCheck,
   Truck,
   Factory,
+  Pencil,
 } from "lucide-react";
 
 export const Route = createFileRoute("/urun/$productId")({
@@ -45,7 +46,7 @@ export const Route = createFileRoute("/urun/$productId")({
 
 function ProductPage() {
   const { productId } = Route.useParams();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const queryClient = useQueryClient();
 
   const [activeImageIdx, setActiveImageIdx] = useState(0);
@@ -193,6 +194,19 @@ function ProductPage() {
           </>
         )}
         <span className="font-medium text-foreground">{data.name}</span>
+
+        {/* Sadece adminlerin göreceği "Düzenle" butonu */}
+        {user && isAdmin && (
+          <Link
+            to="/yonetim"
+            search={{ edit: data.id }}
+            className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-3.5 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-500/20 dark:text-amber-400 transition-colors"
+            title="Yönetim panelinde bu ürünü düzenle"
+          >
+            <Pencil className="size-3.5" />
+            <span>Düzenle</span>
+          </Link>
+        )}
       </nav>
 
       <div className="mt-8 grid gap-12 lg:grid-cols-[1.1fr_1fr]">
