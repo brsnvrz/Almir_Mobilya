@@ -7,6 +7,7 @@ export type CategoryRow = {
   name: string;
   description: string | null;
   image_url: string | null;
+  slideshow_enabled?: boolean;
   sort_order: number;
   created_at: string;
   updated_at: string;
@@ -55,7 +56,7 @@ export type ProductRow = {
 export const getFullCategoriesFn = createServerFn({ method: "GET" }).handler(async () => {
   const sql = getSql();
   const cats = (await sql`
-    SELECT id, slug, name, description, image_url, sort_order, created_at, updated_at
+    SELECT id, slug, name, description, image_url, slideshow_enabled, sort_order, created_at, updated_at
     FROM categories
     ORDER BY sort_order ASC, created_at ASC
   `) as CategoryRow[];
@@ -253,26 +254,27 @@ export const saveCategoryFn = createServerFn({ method: "POST" })
   .validator((payload: any) => payload)
   .handler(async ({ data }) => {
     const sql = getSql();
-    const { id, name, slug, description, image_url, sort_order = 0 } = data;
+    const { id, name, slug, description, image_url, slideshow_enabled = false, sort_order = 0 } = data;
 
     let res: CategoryRow[];
     if (id) {
       res = (await sql`
-        INSERT INTO categories (id, name, slug, description, image_url, sort_order, updated_at)
-        VALUES (${id}::uuid, ${name}, ${slug}, ${description || null}, ${image_url || null}, ${sort_order}, now())
+        INSERT INTO categories (id, name, slug, description, image_url, slideshow_enabled, sort_order, updated_at)
+        VALUES (${id}::uuid, ${name}, ${slug}, ${description || null}, ${image_url || null}, ${Boolean(slideshow_enabled)}, ${sort_order}, now())
         ON CONFLICT (id) DO UPDATE SET
           name = EXCLUDED.name,
           slug = EXCLUDED.slug,
           description = EXCLUDED.description,
           image_url = EXCLUDED.image_url,
+          slideshow_enabled = EXCLUDED.slideshow_enabled,
           sort_order = EXCLUDED.sort_order,
           updated_at = now()
         RETURNING *
       `) as CategoryRow[];
     } else {
       res = (await sql`
-        INSERT INTO categories (name, slug, description, image_url, sort_order)
-        VALUES (${name}, ${slug}, ${description || null}, ${image_url || null}, ${sort_order})
+        INSERT INTO categories (name, slug, description, image_url, slideshow_enabled, sort_order)
+        VALUES (${name}, ${slug}, ${description || null}, ${image_url || null}, ${Boolean(slideshow_enabled)}, ${sort_order})
         RETURNING *
       `) as CategoryRow[];
     }

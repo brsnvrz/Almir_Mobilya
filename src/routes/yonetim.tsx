@@ -1136,6 +1136,8 @@ function CategoriesAdminSection() {
   const [catSlug, setCatSlug] = useState("");
   const [catDesc, setCatDesc] = useState("");
   const [catImg, setCatImg] = useState("");
+  const [catSlideshow, setCatSlideshow] = useState(false);
+  const [isUploadingNewCat, setIsUploadingNewCat] = useState(false);
 
   const [activeCatId, setActiveCatId] = useState<string | null>(null);
 
@@ -1143,6 +1145,7 @@ function CategoriesAdminSection() {
   const [subSlug, setSubSlug] = useState("");
   const [subDesc, setSubDesc] = useState("");
   const [subImg, setSubImg] = useState("");
+  const [isUploadingNewSub, setIsUploadingNewSub] = useState(false);
 
   const { data: categories } = useQuery({
     queryKey: ["admin-categories-full"],
@@ -1169,6 +1172,7 @@ function CategoriesAdminSection() {
         slug,
         description: catDesc.trim() || null,
         image_url: catImg.trim() || null,
+        slideshow_enabled: catSlideshow,
       });
     },
     onSuccess: () => {
@@ -1176,8 +1180,12 @@ function CategoriesAdminSection() {
       setCatSlug("");
       setCatDesc("");
       setCatImg("");
+      setCatSlideshow(false);
       toast.success("Ana kategori eklendi.");
       invalidateAll();
+    },
+    onError: (err: any) => {
+      toast.error("Hata: " + (err?.message || "Kategori eklenemedi."));
     },
   });
 
@@ -1189,6 +1197,29 @@ function CategoriesAdminSection() {
     onSuccess: () => {
       toast.success("Kategori silindi.");
       invalidateAll();
+    },
+  });
+
+  const toggleCategorySlideshow = useMutation({
+    mutationFn: async (cat: any) => {
+      const nextVal = !cat.slideshow_enabled;
+      await createCategory({
+        id: cat.id,
+        name: cat.name,
+        slug: cat.slug,
+        description: cat.description,
+        image_url: cat.image_url,
+        slideshow_enabled: nextVal,
+        sort_order: cat.sort_order,
+      });
+      return nextVal;
+    },
+    onSuccess: (nextVal) => {
+      toast.success(nextVal ? "Ana sayfa slaytı AÇILDI" : "Ana sayfa slaytı KAPATILDI");
+      invalidateAll();
+    },
+    onError: (err: any) => {
+      toast.error("Slayt durumu güncellenemedi: " + (err?.message || "Hata"));
     },
   });
 
@@ -1213,6 +1244,9 @@ function CategoriesAdminSection() {
       toast.success("Alt kategori eklendi.");
       invalidateAll();
     },
+    onError: (err: any) => {
+      toast.error("Hata: " + (err?.message || "Alt kategori eklenemedi."));
+    },
   });
 
   const deleteSubcategory = useMutation({
@@ -1228,12 +1262,24 @@ function CategoriesAdminSection() {
 
   // Kategori düzenleme state
   const [editingCat, setEditingCat] = useState<{
-    id: string; name: string; slug: string; description: string; image_url: string;
+    id: string;
+    name: string;
+    slug: string;
+    description: string;
+    image_url: string;
+    slideshow_enabled: boolean;
   } | null>(null);
   const [editingCatUploading, setEditingCatUploading] = useState(false);
 
   const updateCategory = useMutation({
-    mutationFn: async (payload: { id: string; name: string; slug: string; description: string; image_url: string }) => {
+    mutationFn: async (payload: {
+      id: string;
+      name: string;
+      slug: string;
+      description: string;
+      image_url: string;
+      slideshow_enabled: boolean;
+    }) => {
       if (!payload.name.trim()) throw new Error("Kategori adı gereklidir.");
       await createCategory({
         id: payload.id,
@@ -1241,26 +1287,39 @@ function CategoriesAdminSection() {
         slug: payload.slug.trim() || payload.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
         description: payload.description.trim() || null,
         image_url: payload.image_url.trim() || null,
+        slideshow_enabled: payload.slideshow_enabled,
       });
     },
     onSuccess: () => {
       setEditingCat(null);
-      toast.success("Kategori güncellendi.");
+      toast.success("Kategori başarıyla güncellendi.");
       invalidateAll();
     },
     onError: (err: any) => {
-      toast.error("Hata: " + (err.message || "Güncellenemedi."));
+      toast.error("Hata: " + (err?.message || "Güncellenemedi."));
     },
   });
 
   // Alt kategori düzenleme state
   const [editingSub, setEditingSub] = useState<{
-    id: string; category_id: string; name: string; slug: string; description: string; image_url: string;
+    id: string;
+    category_id: string;
+    name: string;
+    slug: string;
+    description: string;
+    image_url: string;
   } | null>(null);
   const [editingSubUploading, setEditingSubUploading] = useState(false);
 
   const updateSubcategory = useMutation({
-    mutationFn: async (payload: { id: string; category_id: string; name: string; slug: string; description: string; image_url: string }) => {
+    mutationFn: async (payload: {
+      id: string;
+      category_id: string;
+      name: string;
+      slug: string;
+      description: string;
+      image_url: string;
+    }) => {
       if (!payload.name.trim()) throw new Error("Alt kategori adı gereklidir.");
       await createSubcategory({
         id: payload.id,
@@ -1277,183 +1336,48 @@ function CategoriesAdminSection() {
       invalidateAll();
     },
     onError: (err: any) => {
-      toast.error("Hata: " + (err.message || "Güncellenemedi."));
+      toast.error("Hata: " + (err?.message || "Güncellenemedi."));
     },
   });
-
-  // Slayt (slideshow) state
-  const [slideshowCatId, setSlideshowCatId] = useState<string | null>(null);
-  const [slideshowIndex, setSlideshowIndex] = useState(0);
-  const [slideshowRunning, setSlideshowRunning] = useState(false);
 
   // Kategori arama state
   const [catSearch, setCatSearch] = useState("");
   const [subSearch, setSubSearch] = useState("");
 
   const filteredCategories = (categories || []).filter((c) =>
-    !catSearch.trim() || c.name.toLowerCase().includes(catSearch.toLowerCase()) || c.slug.includes(catSearch.toLowerCase())
+    !catSearch.trim() ||
+    c.name.toLowerCase().includes(catSearch.toLowerCase()) ||
+    c.slug.includes(catSearch.toLowerCase())
   );
   const filteredSubcategories = (selectedCat?.subcategories || []).filter((s: any) =>
-    !subSearch.trim() || s.name.toLowerCase().includes(subSearch.toLowerCase()) || s.slug.includes(subSearch.toLowerCase())
+    !subSearch.trim() ||
+    s.name.toLowerCase().includes(subSearch.toLowerCase()) ||
+    s.slug.includes(subSearch.toLowerCase())
   );
-
-  // Slayt goesterimi icin urunler - en yeni en eski
-  const { data: allProducts } = useQuery({
-    queryKey: ["admin-products-all"],
-    queryFn: async () => getAllProducts(),
-  });
-
-  const slideshowCat = slideshowCatId ? categories?.find((c) => c.id === slideshowCatId) : null;
-  const slideshowSubIds = new Set((slideshowCat?.subcategories || []).map((s: any) => s.id));
-  const slideshowProducts = (allProducts || [])
-    .filter((p) => slideshowSubIds.has(p.subcategory_id))
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
-  // Slayt frameleri: kategori (5sn) -> urun (3sn) -> kategori (5sn) -> urun (3sn)...
-  const slideshowFrames = slideshowCat
-    ? (() => {
-        const frames: { type: "cat" | "prod"; duration: number; src: string; label: string }[] = [];
-        const catSrc = slideshowCat.image_url || "";
-        if (slideshowProducts.length === 0) {
-          frames.push({ type: "cat", duration: 5000, src: catSrc, label: slideshowCat.name });
-        } else {
-          for (const prod of slideshowProducts) {
-            frames.push({ type: "cat", duration: 5000, src: catSrc, label: slideshowCat.name });
-            if (prod.image_url) {
-              frames.push({ type: "prod", duration: 3000, src: prod.image_url, label: prod.name });
-            }
-          }
-        }
-        return frames;
-      })()
-    : [];
-
-  useEffect(() => {
-    if (!slideshowRunning || slideshowFrames.length === 0) return;
-    const frame = slideshowFrames[slideshowIndex];
-    const timer = setTimeout(() => {
-      setSlideshowIndex((i) => (i + 1) % slideshowFrames.length);
-    }, frame?.duration ?? 3000);
-    return () => clearTimeout(timer);
-  }, [slideshowRunning, slideshowIndex, slideshowFrames]);
-
-  const currentFrame = slideshowFrames[slideshowIndex];
 
   const inputCls = "w-full rounded-lg border border-input bg-background px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-primary";
 
   return (
     <>
-      {/* Slayt Modal */}
-      {slideshowCatId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="relative w-full max-w-2xl rounded-2xl overflow-hidden bg-black shadow-2xl">
-            <div className="flex items-center justify-between bg-black/70 px-4 py-3">
-              <div className="flex items-center gap-3">
-                <span className="text-xs font-semibold text-white/80">
-                  {currentFrame?.type === "cat" ? "📁 " : "🪑 "}
-                  {currentFrame?.label || "—"}
-                </span>
-                <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] text-white/60">
-                  {slideshowIndex + 1} / {slideshowFrames.length}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setSlideshowRunning((r) => !r)}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/30 transition"
-                >
-                  {slideshowRunning ? <Pause className="size-3.5" /> : <Play className="size-3.5" />}
-                  {slideshowRunning ? "Duraklat" : "Oynat"}
-                </button>
-                <button
-                  onClick={() => {
-                    setSlideshowCatId(null);
-                    setSlideshowRunning(false);
-                    setSlideshowIndex(0);
-                  }}
-                  className="rounded-full bg-white/10 p-1.5 text-white hover:bg-white/20 transition"
-                >
-                  <X className="size-4" />
-                </button>
-              </div>
-            </div>
-
-            <div className="relative aspect-video bg-black flex items-center justify-center overflow-hidden">
-              {currentFrame?.src ? (
-                <img
-                  key={slideshowIndex}
-                  src={currentFrame.src}
-                  alt={currentFrame.label}
-                  className="h-full w-full object-contain"
-                />
-              ) : (
-                <div className="flex flex-col items-center gap-2 text-white/40">
-                  <ImageIcon className="size-12" />
-                  <span className="text-xs">Bu kategori için fotoğraf yok</span>
-                </div>
-              )}
-
-              <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent px-4 py-3">
-                <p className="text-sm font-semibold text-white">{currentFrame?.label}</p>
-                <p className="text-[11px] text-white/60">
-                  {currentFrame?.type === "cat" ? "Ana Kategori" : "Ürün"} • {currentFrame ? currentFrame.duration / 1000 : 0}sn
-                </p>
-              </div>
-
-              <button
-                onClick={() => setSlideshowIndex((i) => (i - 1 + slideshowFrames.length) % slideshowFrames.length)}
-                className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/50 px-3 py-1 text-white text-lg hover:bg-black/70 transition"
-              >
-                ‹
-              </button>
-              <button
-                onClick={() => setSlideshowIndex((i) => (i + 1) % slideshowFrames.length)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/50 px-3 py-1 text-white text-lg hover:bg-black/70 transition"
-              >
-                ›
-              </button>
-            </div>
-
-            <div className="flex items-center justify-center gap-1.5 bg-black/70 py-3 px-4 flex-wrap">
-              {slideshowFrames.map((f, i) => (
-                <button
-                  key={i}
-                  onClick={() => setSlideshowIndex(i)}
-                  className={`rounded-full transition-all ${
-                    i === slideshowIndex
-                      ? "bg-white w-4 h-2"
-                      : f.type === "cat"
-                      ? "bg-primary/60 size-2"
-                      : "bg-white/30 size-2"
-                  }`}
-                  title={f.label}
-                />
-              ))}
-            </div>
-
-            <div className="bg-black/60 px-4 py-2 text-[10px] text-white/40 text-center">
-              Sıralama: 5sn kategori → 3sn ürün (en yeni → en eski)
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Kategori Düzenleme Modal */}
       {editingCat && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="panel w-full max-w-md p-6 bg-card shadow-2xl">
             <div className="flex items-center justify-between border-b border-border pb-4">
               <h3 className="font-display text-lg font-semibold">Kategori Düzenle</h3>
-              <button onClick={() => setEditingCat(null)} className="rounded-lg p-1 text-muted-foreground hover:bg-secondary">
+              <button
+                onClick={() => setEditingCat(null)}
+                className="rounded-lg p-1 text-muted-foreground hover:bg-secondary"
+              >
                 <X className="size-5" />
               </button>
             </div>
-            <div className="mt-4 space-y-3">
+            <div className="mt-4 space-y-4">
               <div>
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Kategori Adı *</label>
                 <input
                   value={editingCat.name}
-                  onChange={(e) => setEditingCat((c) => c ? { ...c, name: e.target.value } : c)}
+                  onChange={(e) => setEditingCat((c) => (c ? { ...c, name: e.target.value } : c))}
                   className={inputCls}
                   placeholder="Kategori Adı"
                 />
@@ -1462,7 +1386,7 @@ function CategoriesAdminSection() {
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Slug</label>
                 <input
                   value={editingCat.slug}
-                  onChange={(e) => setEditingCat((c) => c ? { ...c, slug: e.target.value } : c)}
+                  onChange={(e) => setEditingCat((c) => (c ? { ...c, slug: e.target.value } : c))}
                   className={inputCls}
                   placeholder="slug"
                 />
@@ -1471,14 +1395,44 @@ function CategoriesAdminSection() {
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Açıklama</label>
                 <input
                   value={editingCat.description}
-                  onChange={(e) => setEditingCat((c) => c ? { ...c, description: e.target.value } : c)}
+                  onChange={(e) => setEditingCat((c) => (c ? { ...c, description: e.target.value } : c))}
                   className={inputCls}
                   placeholder="Açıklama"
                 />
               </div>
+
+              {/* Slayt Aç / Kapa Butonu / Switch */}
+              <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                    <Play className="size-3.5 text-primary" />
+                    <span>Ana Sayfa Slayt Gösterisi</span>
+                  </p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    5sn kategori fotosu → 3sn ürün fotoları (sırayla)
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setEditingCat((c) => (c ? { ...c, slideshow_enabled: !c.slideshow_enabled } : c))
+                  }
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                    editingCat.slideshow_enabled ? "bg-primary" : "bg-muted"
+                  }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block size-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                      editingCat.slideshow_enabled ? "translate-x-5" : "translate-x-0"
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Kategori Resmi: Galeriden Seç */}
               <div>
-                <label className="mb-1 block text-xs font-semibold text-muted-foreground">Kategori Resmi</label>
-                <div className="flex items-center gap-2 mb-2">
+                <label className="mb-1.5 block text-xs font-semibold text-muted-foreground">Kategori Fotoğrafı</label>
+                <div className="flex items-center gap-3">
                   <input
                     type="file"
                     accept="image/*"
@@ -1492,8 +1446,8 @@ function CategoriesAdminSection() {
                       try {
                         toast.info("Görsel optimize ediliyor...");
                         const base64 = await processImageFile(file);
-                        setEditingCat((c) => c ? { ...c, image_url: base64 } : c);
-                        toast.success("Görsel eklendi.");
+                        setEditingCat((c) => (c ? { ...c, image_url: base64 } : c));
+                        toast.success("Fotoğraf başarıyla yüklendi.");
                       } catch (err: any) {
                         toast.error(err?.message || "Görsel yüklenemedi.");
                       } finally {
@@ -1504,33 +1458,40 @@ function CategoriesAdminSection() {
                   />
                   <label
                     htmlFor="edit-cat-img-upload"
-                    className="cursor-pointer inline-flex items-center gap-1.5 rounded-lg bg-secondary px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-secondary/80 transition-colors"
+                    className="cursor-pointer inline-flex items-center gap-2 rounded-lg bg-primary px-3.5 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors shadow-xs"
                   >
-                    {editingCatUploading ? <Loader2 className="size-3.5 animate-spin" /> : <Upload className="size-3.5" />}
-                    <span>{editingCatUploading ? "Yükleniyor..." : "Galeriden Seç"}</span>
+                    {editingCatUploading ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
+                    <span>{editingCatUploading ? "Yükleniyor..." : "Galeriden Fotoğraf Seç"}</span>
                   </label>
                   {editingCat.image_url && (
-                    <img src={editingCat.image_url} alt="Kategori" className="size-10 rounded-lg object-cover border border-border" />
+                    <div className="relative group size-12 rounded-lg overflow-hidden border border-border">
+                      <img src={editingCat.image_url} alt="Kategori" className="h-full w-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setEditingCat((c) => (c ? { ...c, image_url: "" } : c))}
+                        className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity"
+                        title="Fotoğrafı Kaldır"
+                      >
+                        <X className="size-3.5" />
+                      </button>
+                    </div>
                   )}
                 </div>
-                <input
-                  value={editingCat.image_url}
-                  onChange={(e) => setEditingCat((c) => c ? { ...c, image_url: e.target.value } : c)}
-                  className={inputCls}
-                  placeholder="veya resim linki yapıştırın (https://...)"
-                />
               </div>
+
               <div className="flex items-center justify-end gap-2 border-t border-border pt-4">
                 <button
+                  type="button"
                   onClick={() => setEditingCat(null)}
                   className="rounded-full border border-border px-4 py-2 text-xs font-medium hover:bg-secondary"
                 >
                   Vazgeç
                 </button>
                 <button
+                  type="button"
                   onClick={() => updateCategory.mutate(editingCat)}
                   disabled={updateCategory.isPending}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-primary px-5 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-primary px-5 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-50 shadow"
                 >
                   {updateCategory.isPending ? <Loader2 className="size-3.5 animate-spin" /> : <Save className="size-3.5" />}
                   {updateCategory.isPending ? "Kaydediliyor..." : "Kaydet"}
@@ -1547,16 +1508,19 @@ function CategoriesAdminSection() {
           <div className="panel w-full max-w-md p-6 bg-card shadow-2xl">
             <div className="flex items-center justify-between border-b border-border pb-4">
               <h3 className="font-display text-lg font-semibold">Alt Kategori Düzenle</h3>
-              <button onClick={() => setEditingSub(null)} className="rounded-lg p-1 text-muted-foreground hover:bg-secondary">
+              <button
+                onClick={() => setEditingSub(null)}
+                className="rounded-lg p-1 text-muted-foreground hover:bg-secondary"
+              >
                 <X className="size-5" />
               </button>
             </div>
-            <div className="mt-4 space-y-3">
+            <div className="mt-4 space-y-4">
               <div>
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Alt Kategori Adı *</label>
                 <input
                   value={editingSub.name}
-                  onChange={(e) => setEditingSub((s) => s ? { ...s, name: e.target.value } : s)}
+                  onChange={(e) => setEditingSub((s) => (s ? { ...s, name: e.target.value } : s))}
                   className={inputCls}
                   placeholder="Alt Kategori Adı"
                 />
@@ -1565,7 +1529,7 @@ function CategoriesAdminSection() {
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Slug</label>
                 <input
                   value={editingSub.slug}
-                  onChange={(e) => setEditingSub((s) => s ? { ...s, slug: e.target.value } : s)}
+                  onChange={(e) => setEditingSub((s) => (s ? { ...s, slug: e.target.value } : s))}
                   className={inputCls}
                   placeholder="slug"
                 />
@@ -1574,14 +1538,16 @@ function CategoriesAdminSection() {
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Açıklama</label>
                 <input
                   value={editingSub.description}
-                  onChange={(e) => setEditingSub((s) => s ? { ...s, description: e.target.value } : s)}
+                  onChange={(e) => setEditingSub((s) => (s ? { ...s, description: e.target.value } : s))}
                   className={inputCls}
                   placeholder="Açıklama"
                 />
               </div>
+
+              {/* Alt Kategori Resmi: Galeriden Seç */}
               <div>
-                <label className="mb-1 block text-xs font-semibold text-muted-foreground">Alt Kategori Resmi</label>
-                <div className="flex items-center gap-2 mb-2">
+                <label className="mb-1.5 block text-xs font-semibold text-muted-foreground">Alt Kategori Fotoğrafı</label>
+                <div className="flex items-center gap-3">
                   <input
                     type="file"
                     accept="image/*"
@@ -1595,8 +1561,8 @@ function CategoriesAdminSection() {
                       try {
                         toast.info("Görsel optimize ediliyor...");
                         const base64 = await processImageFile(file);
-                        setEditingSub((s) => s ? { ...s, image_url: base64 } : s);
-                        toast.success("Görsel eklendi.");
+                        setEditingSub((s) => (s ? { ...s, image_url: base64 } : s));
+                        toast.success("Fotoğraf başarıyla yüklendi.");
                       } catch (err: any) {
                         toast.error(err?.message || "Görsel yüklenemedi.");
                       } finally {
@@ -1607,33 +1573,40 @@ function CategoriesAdminSection() {
                   />
                   <label
                     htmlFor="edit-sub-img-upload"
-                    className="cursor-pointer inline-flex items-center gap-1.5 rounded-lg bg-secondary px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-secondary/80 transition-colors"
+                    className="cursor-pointer inline-flex items-center gap-2 rounded-lg bg-primary px-3.5 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors shadow-xs"
                   >
-                    {editingSubUploading ? <Loader2 className="size-3.5 animate-spin" /> : <Upload className="size-3.5" />}
-                    <span>{editingSubUploading ? "Yükleniyor..." : "Galeriden Seç"}</span>
+                    {editingSubUploading ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
+                    <span>{editingSubUploading ? "Yükleniyor..." : "Galeriden Fotoğraf Seç"}</span>
                   </label>
                   {editingSub.image_url && (
-                    <img src={editingSub.image_url} alt="Alt Kategori" className="size-10 rounded-lg object-cover border border-border" />
+                    <div className="relative group size-12 rounded-lg overflow-hidden border border-border">
+                      <img src={editingSub.image_url} alt="Alt Kategori" className="h-full w-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setEditingSub((s) => (s ? { ...s, image_url: "" } : s))}
+                        className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity"
+                        title="Fotoğrafı Kaldır"
+                      >
+                        <X className="size-3.5" />
+                      </button>
+                    </div>
                   )}
                 </div>
-                <input
-                  value={editingSub.image_url}
-                  onChange={(e) => setEditingSub((s) => s ? { ...s, image_url: e.target.value } : s)}
-                  className={inputCls}
-                  placeholder="veya resim linki yapıştırın (https://...)"
-                />
               </div>
+
               <div className="flex items-center justify-end gap-2 border-t border-border pt-4">
                 <button
+                  type="button"
                   onClick={() => setEditingSub(null)}
                   className="rounded-full border border-border px-4 py-2 text-xs font-medium hover:bg-secondary"
                 >
                   Vazgeç
                 </button>
                 <button
+                  type="button"
                   onClick={() => updateSubcategory.mutate(editingSub)}
                   disabled={updateSubcategory.isPending}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-primary px-5 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-primary px-5 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-50 shadow"
                 >
                   {updateSubcategory.isPending ? <Loader2 className="size-3.5 animate-spin" /> : <Save className="size-3.5" />}
                   {updateSubcategory.isPending ? "Kaydediliyor..." : "Kaydet"}
@@ -1655,7 +1628,7 @@ function CategoriesAdminSection() {
           {/* Yeni Ana Kategori Ekle Formu */}
           <div className="mt-4 rounded-xl border border-dashed border-border p-4 bg-secondary/30">
             <p className="text-xs font-semibold mb-3">Yeni Ana Kategori Ekle</p>
-            <div className="grid gap-2">
+            <div className="grid gap-2.5">
               <input
                 value={catName}
                 onChange={(e) => {
@@ -1663,32 +1636,87 @@ function CategoriesAdminSection() {
                   if (!catSlug) setCatSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, "-"));
                 }}
                 placeholder="Kategori Adı (örn. Masa & Sandalye)"
-                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-primary"
+                className={inputCls}
               />
               <input
                 value={catSlug}
                 onChange={(e) => setCatSlug(e.target.value)}
                 placeholder="Slug (örn. masa-sandalye)"
-                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-primary"
+                className={inputCls}
               />
               <input
                 value={catDesc}
                 onChange={(e) => setCatDesc(e.target.value)}
                 placeholder="Açıklama"
-                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-primary"
+                className={inputCls}
               />
-              <input
-                value={catImg}
-                onChange={(e) => setCatImg(e.target.value)}
-                placeholder="Kategori resim linki (opsiyonel)"
-                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-primary"
-              />
+
+              {/* Galeriden Fotoğraf Seç */}
+              <div className="flex items-center justify-between rounded-lg border border-border/80 bg-background/80 p-2.5">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    id="new-cat-img-upload"
+                    className="hidden"
+                    disabled={isUploadingNewCat}
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setIsUploadingNewCat(true);
+                      try {
+                        toast.info("Görsel optimize ediliyor...");
+                        const base64 = await processImageFile(file);
+                        setCatImg(base64);
+                        toast.success("Fotoğraf seçildi.");
+                      } catch (err: any) {
+                        toast.error(err?.message || "Görsel yüklenemedi.");
+                      } finally {
+                        setIsUploadingNewCat(false);
+                        e.target.value = "";
+                      }
+                    }}
+                  />
+                  <label
+                    htmlFor="new-cat-img-upload"
+                    className="cursor-pointer inline-flex items-center gap-1.5 rounded-lg bg-secondary px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-secondary/80 transition-colors"
+                  >
+                    {isUploadingNewCat ? <Loader2 className="size-3.5 animate-spin" /> : <Upload className="size-3.5" />}
+                    <span>{isUploadingNewCat ? "Yükleniyor..." : "Galeriden Fotoğraf Seç"}</span>
+                  </label>
+                  {catImg && (
+                    <div className="relative group size-10 rounded-lg overflow-hidden border border-border">
+                      <img src={catImg} alt="Yeni" className="h-full w-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setCatImg("")}
+                        className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white"
+                      >
+                        <X className="size-3" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Slayt Toggle */}
+                <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-muted-foreground select-none">
+                  <input
+                    type="checkbox"
+                    checked={catSlideshow}
+                    onChange={(e) => setCatSlideshow(e.target.checked)}
+                    className="size-3.5 rounded border-border text-primary focus:ring-primary"
+                  />
+                  <span>Slayt Açık</span>
+                </label>
+              </div>
+
               <button
+                type="button"
                 onClick={() => addCategory.mutate()}
                 disabled={!catName.trim() || addCategory.isPending}
-                className="rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-50"
+                className="rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-50 shadow-xs"
               >
-                Kategori Ekle
+                {addCategory.isPending ? "Ekleniyor..." : "Kategori Ekle"}
               </button>
             </div>
           </div>
@@ -1720,33 +1748,51 @@ function CategoriesAdminSection() {
                   <img
                     src={cat.image_url}
                     alt={cat.name}
-                    className="size-10 rounded-lg object-cover border border-border flex-shrink-0"
+                    className="size-11 rounded-lg object-cover border border-border flex-shrink-0"
                   />
                 ) : (
-                  <div className="size-10 rounded-lg bg-secondary border border-border flex items-center justify-center flex-shrink-0">
+                  <div className="size-11 rounded-lg bg-secondary border border-border flex items-center justify-center flex-shrink-0">
                     <ImageIcon className="size-4 text-muted-foreground" />
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm truncate">{cat.name}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-sm truncate">{cat.name}</p>
+                    {cat.slideshow_enabled ? (
+                      <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+                        Slayt Açık
+                      </span>
+                    ) : (
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                        Slayt Kapalı
+                      </span>
+                    )}
+                  </div>
                   <span className="text-[11px] text-muted-foreground">
                     /{cat.slug} • {cat.subcategories?.length ?? 0} alt kategori
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
+                  {/* Hızlı Slayt Aç/Kapat Butonu */}
                   <button
+                    type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setSlideshowCatId(cat.id);
-                      setSlideshowIndex(0);
-                      setSlideshowRunning(true);
+                      toggleCategorySlideshow.mutate(cat);
                     }}
-                    className="rounded-lg p-1.5 text-muted-foreground hover:bg-primary/10 hover:text-primary"
-                    title="Slayt Gösterisi Aç"
+                    className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-all border ${
+                      cat.slideshow_enabled
+                        ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20"
+                        : "border-border bg-card text-muted-foreground hover:bg-secondary"
+                    }`}
+                    title={cat.slideshow_enabled ? "Slaytı Kapat" : "Slaytı Aç"}
                   >
-                    <Play className="size-3.5" />
+                    {cat.slideshow_enabled ? "Slayt Açık" : "Slayt Aç"}
                   </button>
+
+                  {/* Düzenle Butonu */}
                   <button
+                    type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       setEditingCat({
@@ -1755,6 +1801,7 @@ function CategoriesAdminSection() {
                         slug: cat.slug,
                         description: cat.description || "",
                         image_url: cat.image_url || "",
+                        slideshow_enabled: Boolean(cat.slideshow_enabled),
                       });
                     }}
                     className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
@@ -1762,7 +1809,10 @@ function CategoriesAdminSection() {
                   >
                     <Edit2 className="size-3.5" />
                   </button>
+
+                  {/* Sil Butonu */}
                   <button
+                    type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       deleteCategory.mutate(cat.id);
@@ -1795,7 +1845,7 @@ function CategoriesAdminSection() {
               {/* Yeni Alt Kategori Ekle Formu */}
               <div className="mt-4 rounded-xl border border-dashed border-border p-4 bg-secondary/30">
                 <p className="text-xs font-semibold mb-3">Bu Kategoriye Alt Kategori Ekle</p>
-                <div className="grid gap-2">
+                <div className="grid gap-2.5">
                   <input
                     value={subName}
                     onChange={(e) => {
@@ -1803,32 +1853,74 @@ function CategoriesAdminSection() {
                       if (!subSlug) setSubSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, "-"));
                     }}
                     placeholder="Alt Kategori Adı (örn. Mutfak Dolabı)"
-                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-primary"
+                    className={inputCls}
                   />
                   <input
                     value={subSlug}
                     onChange={(e) => setSubSlug(e.target.value)}
                     placeholder="Slug (örn. mutfak-dolabi)"
-                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-primary"
+                    className={inputCls}
                   />
                   <input
                     value={subDesc}
                     onChange={(e) => setSubDesc(e.target.value)}
                     placeholder="Açıklama"
-                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-primary"
+                    className={inputCls}
                   />
-                  <input
-                    value={subImg}
-                    onChange={(e) => setSubImg(e.target.value)}
-                    placeholder="Alt kategori resim linki (opsiyonel)"
-                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-primary"
-                  />
+
+                  {/* Alt Kategori İçin Galeriden Fotoğraf Seç */}
+                  <div className="flex items-center gap-3 rounded-lg border border-border/80 bg-background/80 p-2.5">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      id="new-sub-img-upload"
+                      className="hidden"
+                      disabled={isUploadingNewSub}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setIsUploadingNewSub(true);
+                        try {
+                          toast.info("Görsel optimize ediliyor...");
+                          const base64 = await processImageFile(file);
+                          setSubImg(base64);
+                          toast.success("Fotoğraf seçildi.");
+                        } catch (err: any) {
+                          toast.error(err?.message || "Görsel yüklenemedi.");
+                        } finally {
+                          setIsUploadingNewSub(false);
+                          e.target.value = "";
+                        }
+                      }}
+                    />
+                    <label
+                      htmlFor="new-sub-img-upload"
+                      className="cursor-pointer inline-flex items-center gap-1.5 rounded-lg bg-secondary px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-secondary/80 transition-colors"
+                    >
+                      {isUploadingNewSub ? <Loader2 className="size-3.5 animate-spin" /> : <Upload className="size-3.5" />}
+                      <span>{isUploadingNewSub ? "Yükleniyor..." : "Galeriden Fotoğraf Seç"}</span>
+                    </label>
+                    {subImg && (
+                      <div className="relative group size-10 rounded-lg overflow-hidden border border-border">
+                        <img src={subImg} alt="Yeni Alt" className="h-full w-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => setSubImg("")}
+                          className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white"
+                        >
+                          <X className="size-3" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
                   <button
+                    type="button"
                     onClick={() => addSubcategory.mutate()}
                     disabled={!subName.trim() || addSubcategory.isPending}
-                    className="rounded-full bg-ink px-4 py-2 text-xs font-semibold text-ink-foreground disabled:opacity-50"
+                    className="rounded-full bg-ink px-4 py-2 text-xs font-semibold text-ink-foreground disabled:opacity-50 shadow-xs"
                   >
-                    Alt Kategori Ekle
+                    {addSubcategory.isPending ? "Ekleniyor..." : "Alt Kategori Ekle"}
                   </button>
                 </div>
               </div>
@@ -1855,10 +1947,10 @@ function CategoriesAdminSection() {
                       <img
                         src={sub.image_url}
                         alt={sub.name}
-                        className="size-9 rounded-lg object-cover border border-border flex-shrink-0"
+                        className="size-10 rounded-lg object-cover border border-border flex-shrink-0"
                       />
                     ) : (
-                      <div className="size-9 rounded-lg bg-secondary border border-border flex items-center justify-center flex-shrink-0">
+                      <div className="size-10 rounded-lg bg-secondary border border-border flex items-center justify-center flex-shrink-0">
                         <ImageIcon className="size-3.5 text-muted-foreground" />
                       </div>
                     )}
@@ -1868,6 +1960,7 @@ function CategoriesAdminSection() {
                     </div>
                     <div className="flex items-center gap-1.5 flex-shrink-0">
                       <button
+                        type="button"
                         onClick={() =>
                           setEditingSub({
                             id: sub.id,
@@ -1884,6 +1977,7 @@ function CategoriesAdminSection() {
                         <Edit2 className="size-3.5" />
                       </button>
                       <button
+                        type="button"
                         onClick={() => deleteSubcategory.mutate(sub.id)}
                         className="rounded-lg p-1.5 text-destructive hover:bg-destructive/10"
                         title="Sil"
