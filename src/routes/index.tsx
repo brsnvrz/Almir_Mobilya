@@ -252,8 +252,8 @@ function Index() {
         </div>
         <div className="overflow-hidden rounded-2xl border border-border shadow-panel">
           <img
-            src="/images/hero-mutfak.jpg"
-            alt="Almir Mobilya ölçüye özel meşe mutfak dolabı uygulaması"
+            src="/images/hero-almir.jpg"
+            alt="Almir Mobilya - Mutfağınızdan Banyonuza"
             width={1600}
             height={1104}
             className="h-full w-full object-cover"
