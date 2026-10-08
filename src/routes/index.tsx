@@ -35,6 +35,7 @@ const DEFAULT_CATEGORIES: CategoryItem[] = [
     description: "Mutfak dolabı, gardırop, banyo dolabı ve kitaplık çözümleri.",
     image_url: "/images/kategori-dolap.jpg",
     slideshow_enabled: true,
+    is_pinned: false,
     sort_order: 1,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -46,6 +47,7 @@ const DEFAULT_CATEGORIES: CategoryItem[] = [
     description: "İç mekan, çerçeveli ve masif kapı modelleri.",
     image_url: "/images/kategori-kapi.jpg",
     slideshow_enabled: true,
+    is_pinned: false,
     sort_order: 2,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -57,6 +59,7 @@ const DEFAULT_CATEGORIES: CategoryItem[] = [
     description: "Masif, lamine ve balık sırtı parke uygulamaları.",
     image_url: "/images/kategori-parke.jpg",
     slideshow_enabled: true,
+    is_pinned: false,
     sort_order: 3,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -209,6 +212,15 @@ function Index() {
     },
   });
 
+  const sortedCategories = useMemo(() => {
+    return [...categories].sort((a, b) => {
+      const pinA = a.is_pinned ? 1 : 0;
+      const pinB = b.is_pinned ? 1 : 0;
+      if (pinA !== pinB) return pinB - pinA;
+      return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+    });
+  }, [categories]);
+
   return (
     <div className="mx-auto max-w-7xl px-5">
       <section className="grid items-center gap-10 py-14 lg:grid-cols-[1.05fr_1fr]">
@@ -220,8 +232,7 @@ function Index() {
             atölyeden evinize.
           </h1>
           <p className="mt-5 max-w-lg text-lg text-muted-foreground">
-            Dolaptan parkeye, kapıdan gardıroba. Kataloglarımızda her ürünün malzemesi, ölçüsü ve
-            fiyatı açık yazar.
+            Dolaptan parkeye, kapıdan gardıroba. Katalog dışında özel üretim montaj.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
@@ -254,11 +265,11 @@ function Index() {
         <div className="mb-6 flex items-end justify-between">
           <h2 className="font-display text-3xl tracking-tight">Kategoriler</h2>
           <span className="text-sm text-muted-foreground">
-            {categories?.length ?? 0} ana kategori
+            {sortedCategories.length} ana kategori
           </span>
         </div>
         <div className="grid gap-5 md:grid-cols-3">
-          {categories?.map((cat) => (
+          {sortedCategories.map((cat) => (
             <CategoryCard key={cat.id} cat={cat} allProducts={allProducts} />
           ))}
         </div>

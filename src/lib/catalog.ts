@@ -17,6 +17,7 @@ export type CategoryItem = {
   description: string | null;
   image_url: string | null;
   slideshow_enabled?: boolean;
+  is_pinned?: boolean;
   sort_order: number;
   created_at: string;
   updated_at: string;
@@ -130,6 +131,7 @@ export async function createCategory(payload: {
   description?: string | null;
   image_url?: string | null;
   slideshow_enabled?: boolean;
+  is_pinned?: boolean;
   sort_order?: number;
 }): Promise<CategoryItem> {
   try {

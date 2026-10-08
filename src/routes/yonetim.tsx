@@ -1,4 +1,4 @@
-﻿import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,6 +47,7 @@ import {
   Pause,
   Search,
   Save,
+  Pin,
 } from "lucide-react";
 import { AuthModal } from "@/components/AuthModal";
 import { processImageFile, processMultipleImageFiles } from "@/lib/image-upload";
@@ -1137,6 +1138,7 @@ function CategoriesAdminSection() {
   const [catDesc, setCatDesc] = useState("");
   const [catImg, setCatImg] = useState("");
   const [catSlideshow, setCatSlideshow] = useState(false);
+  const [catPinned, setCatPinned] = useState(false);
   const [isUploadingNewCat, setIsUploadingNewCat] = useState(false);
 
   const [activeCatId, setActiveCatId] = useState<string | null>(null);
@@ -1173,6 +1175,7 @@ function CategoriesAdminSection() {
         description: catDesc.trim() || null,
         image_url: catImg.trim() || null,
         slideshow_enabled: catSlideshow,
+        is_pinned: catPinned,
       });
     },
     onSuccess: () => {
@@ -1181,6 +1184,7 @@ function CategoriesAdminSection() {
       setCatDesc("");
       setCatImg("");
       setCatSlideshow(false);
+      setCatPinned(false);
       toast.success("Ana kategori eklendi.");
       invalidateAll();
     },
@@ -1210,6 +1214,7 @@ function CategoriesAdminSection() {
         description: cat.description,
         image_url: cat.image_url,
         slideshow_enabled: nextVal,
+        is_pinned: cat.is_pinned,
         sort_order: cat.sort_order,
       });
       return nextVal;
@@ -1220,6 +1225,34 @@ function CategoriesAdminSection() {
     },
     onError: (err: any) => {
       toast.error("Slayt durumu güncellenemedi: " + (err?.message || "Hata"));
+    },
+  });
+
+  const toggleCategoryPinned = useMutation({
+    mutationFn: async (cat: any) => {
+      const nextVal = !cat.is_pinned;
+      await createCategory({
+        id: cat.id,
+        name: cat.name,
+        slug: cat.slug,
+        description: cat.description,
+        image_url: cat.image_url,
+        slideshow_enabled: cat.slideshow_enabled,
+        is_pinned: nextVal,
+        sort_order: cat.sort_order,
+      });
+      return nextVal;
+    },
+    onSuccess: (nextVal) => {
+      toast.success(
+        nextVal
+          ? "Kategori ana sayfada en üste sabitlendi"
+          : "Kategori eski sırasına döndürüldü"
+      );
+      invalidateAll();
+    },
+    onError: (err: any) => {
+      toast.error("Sabitleme durumu güncellenemedi: " + (err?.message || "Hata"));
     },
   });
 
@@ -1268,6 +1301,7 @@ function CategoriesAdminSection() {
     description: string;
     image_url: string;
     slideshow_enabled: boolean;
+    is_pinned: boolean;
   } | null>(null);
   const [editingCatUploading, setEditingCatUploading] = useState(false);
 
@@ -1279,6 +1313,7 @@ function CategoriesAdminSection() {
       description: string;
       image_url: string;
       slideshow_enabled: boolean;
+      is_pinned: boolean;
     }) => {
       if (!payload.name.trim()) throw new Error("Kategori adı gereklidir.");
       await createCategory({
@@ -1288,6 +1323,7 @@ function CategoriesAdminSection() {
         description: payload.description.trim() || null,
         image_url: payload.image_url.trim() || null,
         slideshow_enabled: payload.slideshow_enabled,
+        is_pinned: payload.is_pinned,
       });
     },
     onSuccess: () => {
@@ -1424,6 +1460,34 @@ function CategoriesAdminSection() {
                   <span
                     className={`pointer-events-none inline-block size-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
                       editingCat.slideshow_enabled ? "translate-x-5" : "translate-x-0"
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Ana Sayfada En Üste Çıkar Aç / Kapa Butonu (Açınca en üste çıkar, kapatınca eski yerine döner) */}
+              <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                    <Pin className="size-3.5 text-amber-500" />
+                    <span>Ana Sayfada En Üste Çıkar</span>
+                  </p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    Açıldığında ana sayfada en başta gösterilir, kapatıldığında eski yerine döner.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setEditingCat((c) => (c ? { ...c, is_pinned: !c.is_pinned } : c))
+                  }
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                    editingCat.is_pinned ? "bg-amber-500" : "bg-muted"
+                  }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block size-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                      editingCat.is_pinned ? "translate-x-5" : "translate-x-0"
                     }`}
                   />
                 </button>
@@ -1708,6 +1772,19 @@ function CategoriesAdminSection() {
                   />
                   <span>Slayt Açık</span>
                 </label>
+
+                {/* En Üste Sabitle Toggle */}
+                <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-amber-600 dark:text-amber-400 select-none">
+                  <input
+                    type="checkbox"
+                    checked={catPinned}
+                    onChange={(e) => setCatPinned(e.target.checked)}
+                    className="size-3.5 rounded border-border text-amber-500 focus:ring-amber-500"
+                  />
+                  <span className="flex items-center gap-1">
+                    <Pin className="size-3" /> En Üste Sabitle
+                  </span>
+                </label>
               </div>
 
               <button
@@ -1758,6 +1835,12 @@ function CategoriesAdminSection() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="font-semibold text-sm truncate">{cat.name}</p>
+                    {cat.is_pinned && (
+                      <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                        <Pin className="size-2.5" />
+                        En Üstte
+                      </span>
+                    )}
                     {cat.slideshow_enabled ? (
                       <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
                         Slayt Açık
@@ -1773,6 +1856,24 @@ function CategoriesAdminSection() {
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
+                  {/* Hızlı En Üste Sabitle Aç/Kapat Butonu */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleCategoryPinned.mutate(cat);
+                    }}
+                    className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-all border flex items-center gap-1 ${
+                      cat.is_pinned
+                        ? "border-amber-500/40 bg-amber-500/15 text-amber-600 dark:text-amber-400 hover:bg-amber-500/25"
+                        : "border-border bg-card text-muted-foreground hover:bg-secondary"
+                    }`}
+                    title={cat.is_pinned ? "En Üstten Kaldır (Eski Sırasına Döndür)" : "Ana Sayfada En Üste Sabitle"}
+                  >
+                    <Pin className="size-3" />
+                    <span>{cat.is_pinned ? "En Üstte" : "En Üste Al"}</span>
+                  </button>
+
                   {/* Hızlı Slayt Aç/Kapat Butonu */}
                   <button
                     type="button"
@@ -1802,6 +1903,7 @@ function CategoriesAdminSection() {
                         description: cat.description || "",
                         image_url: cat.image_url || "",
                         slideshow_enabled: Boolean(cat.slideshow_enabled),
+                        is_pinned: Boolean(cat.is_pinned),
                       });
                     }}
                     className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
