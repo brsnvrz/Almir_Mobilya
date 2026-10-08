@@ -18,6 +18,10 @@ export const Route = createFileRoute("/")({
         property: "og:description",
         content: "Ölçüye özel mutfak dolabı, gardırop, kapı ve parke katalogları.",
       },
+      {
+        name: "google-site-verification",
+        content: "rO9Hzp6WGoYIPPjIH_Su0EJbkkgoMQSnOgSeir5TLmc",
+      },
     ],
   }),
   component: Index,
